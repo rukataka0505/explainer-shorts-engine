@@ -147,17 +147,17 @@ def delivery_check(root: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Codexの台本と演出をローカルで動画化します")
-    parser.add_argument("command", choices=["check", "prepare", "build", "status", "wait", "inspect", "review", "deliver", "_worker"])
+    parser.add_argument("command", choices=["check", "prepare", "build", "status", "wait", "inspect", "review", "deliver", "publish", "_worker"])
     parser.add_argument("project", type=Path, nargs="?")
     parser.add_argument("--quality", choices=["preview", "final"], default="preview")
     parser.add_argument("--timeout", type=float, default=55)
     parser.add_argument("--at", type=float, default=0)
     parser.add_argument("--duration", type=float, default=0)
-    parser.add_argument("--voices", action="store_true", help="check時にElevenLabsの声一覧を表示")
+    parser.add_argument("--voices", action="store_true", help="check時に選択したサービスの声一覧を表示")
     args = parser.parse_args()
     root = args.project.resolve() if args.project else None
     if args.command == "check":
-        from speech import Voicevox, ElevenLabs
+        from speech import Voicevox, AivisSpeech, ElevenLabs
         project = load_project(root) if root else None
         voices = project["voices"] if project else {"narrator": read_json(REPO_ROOT / "style.json")["voice"]}
         used = {line.get("voice", next(iter(voices))) for beat in project["beats"] for line in beat.get("lines", []) if "path" not in line} if project else set(voices)
@@ -169,11 +169,15 @@ def main() -> int:
                 client = ElevenLabs()
                 identity = client.request("voices/" + voice["voice_id"])
                 checked[key] = {"provider": "elevenlabs", "name": identity["name"]}
+                if args.voices:
+                    listing = [{"voice_id": v["voice_id"], "name": v["name"]}
+                               for v in client.request("voices")["voices"]]
             else:
-                client = Voicevox()
-                checked[key] = {"provider": "voicevox", **client.identity(voice["style_id"])}
-        if args.voices:
-            listing = [{"voice_id": v["voice_id"], "name": v["name"]} for v in ElevenLabs().request("voices")["voices"]]
+                provider = voice.get("provider", "voicevox")
+                client = AivisSpeech() if provider == "aivisspeech" else Voicevox()
+                checked[key] = {"provider": provider, **client.identity(voice["style_id"])}
+                if args.voices:
+                    listing = client.voices
         for name in ("node", "ffmpeg", "ffprobe"):
             if not find_executable(name):
                 raise ValueError(f"{name}が見つかりません")
@@ -222,6 +226,9 @@ def main() -> int:
     elif args.command == "deliver":
         delivery_check(root)
         run([sys.executable, REPO_ROOT / "tools" / "upload_youtube.py", root])
+    elif args.command == "publish":
+        from upload_youtube import publish_video
+        emit(publish_video(root))
     return 0
 
 

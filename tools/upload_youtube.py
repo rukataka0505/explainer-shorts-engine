@@ -614,6 +614,43 @@ def existing_verified_upload(
     return manifest
 
 
+def publish_video(project_dir: Path) -> dict[str, Any]:
+    """Publish only the current, processed delivery with its verified thumbnail."""
+    from video import delivery_check
+    delivery_check(project_dir)
+    manifest_path = project_dir / "output/youtube-upload.json"
+    manifest = read_json(manifest_path)
+    project = read_json(project_dir / "project.json")
+    if manifest.get("sha256") != sha256(final_output_path(project_dir, project)):
+        raise ValueError("納品記録と完成動画が一致しません")
+    if not thumbnail_is_current(manifest, sha256(thumbnail_path(project_dir))):
+        raise ValueError("サムネイルの納品確認が必要です")
+    client_id, client_secret = load_client_credentials()
+    token = obtain_access_token(client_id, client_secret, default_token_path())
+    video_id = manifest["video_id"]
+    remote = get_video(token, video_id)
+    if remote.get("snippet", {}).get("title") != manifest["title"]:
+        raise ValueError("YouTubeタイトルが納品記録と一致しません")
+    if remote.get("processingDetails", {}).get("processingStatus") != "succeeded":
+        raise ValueError("YouTubeの動画処理が完了していません")
+    if remote.get("status", {}).get("privacyStatus") != "public":
+        status = {k: v for k, v in remote.get("status", {}).items() if k in {
+            "embeddable", "license", "publicStatsViewable", "selfDeclaredMadeForKids", "containsSyntheticMedia"}}
+        status["privacyStatus"] = "public"
+        http_request("PUT", VIDEOS_URL + "?part=status", headers={
+            "Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            data=json.dumps({"id": video_id, "status": status}).encode())
+    verified = get_video(token, video_id)
+    privacy = verified.get("status", {}).get("privacyStatus")
+    manifest.update(privacy_status=privacy,
+                    processing_status=verified.get("processingDetails", {}).get("processingStatus"))
+    write_json(manifest_path, manifest)
+    if privacy != "public":
+        raise ValueError(f"YouTubeの公開状態を確認できません: {privacy}")
+    return {"watch_url": manifest["watch_url"], "privacy_status": privacy,
+            "processing_status": manifest["processing_status"]}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="検証済み完成動画をYouTubeへ必ず非公開でアップロードします")
     parser.add_argument("project_dir", nargs="?", type=Path)

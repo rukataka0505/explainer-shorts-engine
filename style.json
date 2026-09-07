@@ -5,14 +5,10 @@
     "fps": 30
   },
   "voice": {
-    "provider": "elevenlabs",
-    "voice_id": "W8wofKLOWnsM57L8hIx2",
-    "name": "Koji",
-    "model_id": "eleven_multilingual_v2",
-    "settings": {
-      "stability": 0.5,
-      "similarity_boost": 0.75
-    }
+    "provider": "aivisspeech",
+    "name": "にせ",
+    "style_id": 1937616896,
+    "settings": {}
   },
   "audio": {
     "gap": 0.12,
@@ -45,5 +41,18 @@
       "outer_outline_color": "#000000"
     },
     "speaker_styles": {}
+  },
+  "elevenlabs": {
+    "provider": "elevenlabs",
+    "voice_id": "W8wofKLOWnsM57L8hIx2",
+    "name": "Koji",
+    "model_id": "eleven_multilingual_v2",
+    "settings": {
+      "stability": 0.5,
+      "similarity_boost": 0.75
+    }
+  },
+  "aivisspeech": {
+    "settings": {}
   }
 }

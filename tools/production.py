@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 from common import REPO_ROOT, ffprobe, final_output_path, find_executable, project_file, read_json, run, write_json
-from speech import Voicevox, ElevenLabs, synthesize, synthesize_elevenlabs
+from speech import Voicevox, AivisSpeech, ElevenLabs, synthesize, synthesize_elevenlabs
 from edit import compile_edit, frame, number
 
 
@@ -23,13 +23,14 @@ def load_project(root: Path) -> dict:
     for name, voice in voices.items():
         provider = voice.setdefault("provider", "voicevox" if "style_id" in voice else "elevenlabs")
         if provider == "elevenlabs":
-            defaults = read_json(REPO_ROOT / "style.json")["voice"]
+            style = read_json(REPO_ROOT / "style.json")
+            defaults = style.get("elevenlabs", style["voice"])
             voices[name] = {**defaults, **voice}
             if not isinstance(voices[name]["voice_id"], str) or not voices[name]["voice_id"].strip():
                 raise ValueError("ElevenLabs voice_idが必要です")
-        elif provider == "voicevox":
+        elif provider in {"voicevox", "aivisspeech"}:
             if not isinstance(voice.get("style_id"), int) or isinstance(voice["style_id"], bool):
-                raise ValueError(f"voices.{name}.style_idはVOICEVOXの整数IDです")
+                raise ValueError(f"voices.{name}.style_idは{provider}の整数IDです")
         else:
             raise ValueError(f"未対応の音声provider: {provider}")
     ids: set[str] = set()
@@ -82,6 +83,7 @@ def prepare(root: Path, project: dict, client=None) -> dict:
     cursor = 0.0
     records, beats, anchors = [], [], {}
     reused = generated = 0
+    clients = {"voicevox": client} if client is not None else {}
     for beat in project["beats"]:
         begin = cursor
         for line in beat.get("lines", []):
@@ -96,13 +98,15 @@ def prepare(root: Path, project: dict, client=None) -> dict:
             else:
                 voice = project["voices"][line.get("voice", next(iter(project["voices"])))]
                 if voice["provider"] == "elevenlabs":
-                    settings = {**style["voice"]["settings"], **voice.get("settings", {}), **line.get("settings", {})}
+                    settings = {**style.get("elevenlabs", style["voice"])["settings"], **voice.get("settings", {}), **line.get("settings", {})}
                     record, cached = synthesize_elevenlabs(ElevenLabs(), root / "work" / "audio", line["text"], voice, settings)
                     captions = record["captions"]
                 else:
-                    client = client or Voicevox()
-                    settings = {**style["voicevox"]["settings"], **voice.get("settings", {}), **line.get("settings", {})}
-                    record, cached = synthesize(client, root / "work" / "audio", line["text"], voice["style_id"], settings)
+                    provider = voice["provider"]
+                    if provider not in clients:
+                        clients[provider] = AivisSpeech() if provider == "aivisspeech" else Voicevox()
+                    settings = {**style.get(provider, {}).get("settings", {}), **voice.get("settings", {}), **line.get("settings", {})}
+                    record, cached = synthesize(clients[provider], root / "work" / "audio", line["text"], voice["style_id"], settings)
                 reused += int(cached)
                 generated += int(not cached)
                 seconds, voice_name = record["duration"], record["name"]

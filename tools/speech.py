@@ -78,6 +78,8 @@ def synthesize_elevenlabs(client, cache, text, voice, settings):
     return {**record, 'path': str(sound)}, False
 
 class Voicevox:
+    provider = "voicevox"
+
     def __init__(self) -> None:
         self.url = os.environ.get("VOICEVOX_URL", "http://127.0.0.1:50021").rstrip("/")
         self.version = self.get("version")
@@ -101,7 +103,22 @@ class Voicevox:
             for style in voice["styles"]:
                 if style["id"] == style_id and style.get("type", "talk") == "talk":
                     return {"uuid": voice["speaker_uuid"], "name": voice["name"]}
-        raise ValueError(f"VOICEVOXに読み上げ用の声がありません: {style_id}")
+        raise ValueError(f"{self.provider}に読み上げ用の声がありません: {style_id}")
+
+
+class AivisSpeech(Voicevox):
+    provider = "aivisspeech"
+
+    def __init__(self) -> None:
+        self.url = os.environ.get("AIVISSPEECH_URL", "http://127.0.0.1:10101").rstrip("/")
+        self.version = self.get("version")
+        self.voices = self.get("speakers")
+
+    def identity(self, style_id: int) -> dict:
+        identity = super().identity(style_id)
+        # Model updates can change synthesis without changing the engine version.
+        voice = next(v for v in self.voices if v["speaker_uuid"] == identity["uuid"])
+        return {**identity, "model_version": voice.get("version", "unknown")}
 
 
 def wav_duration(path: Path) -> float:
@@ -115,7 +132,9 @@ def wav_duration(path: Path) -> float:
 
 def synthesize(client: Voicevox, cache: Path, text: str, style_id: int, settings: dict) -> tuple[dict, bool]:
     identity = client.identity(style_id)
-    key_data = {"text": text, "style": style_id, "voice": identity["uuid"],
+    key_data = {"provider": getattr(client, "provider", "voicevox"),
+                "model_version": identity.get("model_version"),
+                "text": text, "style": style_id, "voice": identity["uuid"],
                 "settings": settings, "engine": client.version}
     key = hashlib.sha256(json.dumps(key_data, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     wav = cache / f"{key}.wav"
@@ -131,7 +150,7 @@ def synthesize(client: Voicevox, cache: Path, text: str, style_id: int, settings
     query = json.loads(client.post("audio_query", {"text": text, "speaker": style_id}))
     for name, value in settings.items():
         if name not in query:
-            raise ValueError(f"未対応のVOICEVOX設定: {name}")
+            raise ValueError(f"未対応の音声設定: {name}")
         query[name] = value
     cache.mkdir(parents=True, exist_ok=True)
     temporary = wav.with_suffix(".tmp.wav")

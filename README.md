@@ -6,7 +6,17 @@
 
 ## セットアップ
 
-Python 3.13、Node.js、Git、FFmpeg/ffprobe。標準音声はElevenLabsのKoji（eleven_multilingual_v2）。ELEVENLABS_API_KEY環境変数を設定する。
+Python 3.13、Node.js、Git、FFmpeg/ffprobe。標準音声はAivisSpeechの「にせ」（ノーマル）。AivisSpeechを公式サイトから導入し、AivisHubの「にせ」を追加する。APIキー不要。
+
+```powershell
+.\tools\start_aivisspeech.ps1
+.\.venv\Scripts\python.exe tools/video.py check --voices
+```
+
+接続先は`AIVISSPEECH_URL`（既定`http://127.0.0.1:10101`）、実行ファイルは`AIVISSPEECH_ENGINE`で指定できる。初回起動はモデルのダウンロードに数分かかる。
+モデル: https://hub.aivis-project.com/aivm-models/6d11c6c2-f4a4-4435-887e-23dd60f8b8dd
+
+「にせ」のAPI style_idは`1937616896`。配布ページ上のローカルStyle ID 0とは異なる。`check --voices`でAPIのIDを確認する。ElevenLabsを選ぶ案件だけELEVENLABS_API_KEYを設定する。
 
 ```powershell
 $env:PYTHONUTF8 = '1'
@@ -29,7 +39,7 @@ Remotion公式Agent Skillsは`.agents/skills/remotion-best-practices/`へ固定�
 .\.venv\Scripts\python.exe tools/video.py review projects/demo-water --quality preview
 ```
 
-NASAの4K元映像3本を約720MBダウンロードし、別の同一打ち上げ記録から15秒の現場音を抽出する。完成した編集指定を使い、約24秒の「ロケットを守る、水の壁」を再現する。この旧サンプルはVOICEVOX:青山龍星を明示指定している。通常の既定音声はElevenLabs。APIや配布ファイルはNASA側で変更される可能性がある。
+NASAの4K元映像3本を約720MBダウンロードし、別の同一打ち上げ記録から15秒の現場音を抽出する。完成した編集指定を使い、約24秒の「ロケットを守る、水の壁」を再現する。この旧サンプルはVOICEVOX:青山龍星を明示指定している。通常の既定音声はAivisSpeech / にせ。APIや配布ファイルはNASA側で変更される可能性がある。
 
 `review`が返すHTMLを開くと、動画と各ショットの頭・中・末尾を見比べられる。画像を押すとその時刻へ移動する。これは編集確認用で、完成動画に文字や画像一覧が入ることはない。
 
@@ -61,7 +71,7 @@ buildは背景実行。waitは最長55秒待ち、終わっていなければも
 ```json
 {
   "title": "ロケットを守る、水の壁",
-  "voices": {"narrator": {"provider": "elevenlabs"}},
+  "voices": {"narrator": {"provider": "aivisspeech", "style_id": 1937616896}},
   "beats": [{"id": "hook", "lines": [
     {"id": "q", "text": "この大量の水、何のためだと思う？", "gap": 0.2},
     {"id": "a", "text": "実は、ロケットを音から守っている。", "gap": 0.4}
@@ -82,7 +92,7 @@ buildは背景実行。waitは最長55秒待ち、終わっていなければも
 |---|---|
 | beats / lines | 意味のまとまりと発話。idは全体で一意。音声実尺＋gapから時間を決める。無言beatはdurationを指定 |
 | line.path | 録音音声の相対パス。指定時はTTSを呼ばない。textはその音声の実際の原稿を記す |
-| voices / line.settings | 省略時はstyle.jsonのElevenLabs音声。provider、voice_id、model_id、settingsを指定可。VOICEVOXはprovider: voicevoxとstyle_id。設定は共通→声→発話の順 |
+| voices / line.settings | 省略時はstyle.jsonのAivisSpeech音声。provider、voice_id、model_id、settingsを指定可。AivisSpeechはprovider: aivisspeechとstyle_id、VOICEVOXはprovider: voicevoxとstyle_id。設定は共通→声→発話の順 |
 | from / to | 全体先頭からの秒数、または`{"line":"id","edge":"startまたはend","offset":秒}`。全beatの発話を参照可。from省略は0、to省略は末尾 |
 | shots | 順番に並ぶ画。前のtoと次のfromを同じ参照でつなぎ、空白と重複を避ける。画像も使用可能 |
 | source_start / speed | 素材内の開始秒と再生倍率。映像の速度変更を使う時は必要な動作を見極める。音トラックは独立 |
@@ -110,7 +120,7 @@ buildは背景実行。waitは最長55秒待ち、終わっていなければも
 .\.venv\Scripts\python.exe tools/video.py deliver projects/<案件>
 ```
 
-`output/thumbnail.jpg`を用意する。文字が不要なら完成版の適切なフレームをFFmpegでJPEGへ取り出せる。既存のYouTube認証はリポジトリ外の`%LOCALAPPDATA%/VideoAutomationEngine/`を共有し、動画は常にprivate。現在の原稿・MP4と検証結果の一致、YouTube処理完了、サムネイル設定成功まで確認する。
+`output/thumbnail.jpg`を用意する。文字が不要なら完成版の適切なフレームをFFmpegでJPEGへ取り出せる。既存のYouTube認証はリポジトリ外の`%LOCALAPPDATA%/VideoAutomationEngine/`を共有し、deliverはprivateで納品する。公開依頼がある場合は、納品完了後に`tools/video.py publish projects/<案件>`でpublicへ変更し、APIで再確認する。現在の原稿・MP4と検証結果の一致、YouTube処理完了、サムネイル設定成功まで確認する。
 
 ## 開発と保存
 
@@ -126,10 +136,12 @@ npm.cmd test --prefix remotion
 
 ## 音声と全文字幕
 
-既定はElevenLabs / Koji / eleven_multilingual_v2。APIキーは環境変数のみから読み、ファイルやGitへ保存しない。
-公開Voice LibraryのKoji（voice_id: W8wofKLOWnsM57L8hIx2）を自分の声一覧へ追加して使う。別の声はstyle.jsonのvoice、または案件のvoicesで指定する。checkは選択したサービスと声を確認し、--voicesでElevenLabsの声一覧を表示する。録音だけの案件はAPI接続不要。
+既定はAivisSpeech / にせ / ノーマル。ローカルAPIの標準設定で生成し、VOICEVOX用の速度・抑揚は混ぜない。設定はstyle.jsonのaivisspeech.settings→声→発話の順に上書きする。
 
-字幕はbeats[].lines[].textから生成し、本文を要約・書き換えない。ElevenLabsのwith-timestamps APIが返す原文の文字時刻で長文のページを切り替える。原文と文字時刻が一致しない場合はエラー。VOICEVOX・録音素材は従来同様に発話全体の時間と文字数による分割のため、長い発話は短く分ける。生成音声の読み違いは試聴して直す。
+ElevenLabs / Koji / eleven_multilingual_v2も選択可能。ElevenLabsの既定設定はstyle.jsonのelevenlabsへ分離。APIキーは環境変数のみから読む。
+公開Voice LibraryのKoji（voice_id: W8wofKLOWnsM57L8hIx2）を自分の声一覧へ追加して使う。別の声はstyle.jsonのvoice、または案件のvoicesで指定する。checkは選択したサービスと声を確認し、--voicesで選択したサービスの声一覧を表示する。録音だけの案件はAPI接続不要。
+
+字幕はbeats[].lines[].textから生成し、本文を要約・書き換えない。ElevenLabsのwith-timestamps APIが返す原文の文字時刻で長文のページを切り替える。原文と文字時刻が一致しない場合はエラー。AivisSpeech・VOICEVOX・録音素材は従来同様に発話全体の時間と文字数による分割のため、長い発話は短く分ける。生成音声の読み違いは試聴して直す。
 
 元エンジンの日本語改行・保護単語とSubtitle描画を流用。既定はずんだもんと同じ緑 #66E07A・白内縁10px・黒外縁4px、帯なし。声とは独立した色設定。1080×1920基準のサイズ・位置をstyle.jsonのsubtitlesへ置き、案件のsubtitlesで上書きできる。字幕原稿は別に作らない。
 音声は本文・声・モデル・設定を含むキャッシュで再利用し、字幕の配置変更だけでは再課金されない。
@@ -140,4 +152,10 @@ API仕様: https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-
 ```powershell
 .\.venv\Scripts\python.exe examples/create_elevenlabs_demo.py
 .\.venv\Scripts\python.exe tools/video.py build projects/elevenlabs-preview --quality preview
+```
+
+AivisSpeechサンプルの再現（NASA実写・約20秒）:
+```powershell
+.\.venv\Scripts\python.exe examples/create_aivisspeech_demo.py
+.\.venv\Scripts\python.exe tools/video.py build projects/aivisspeech-nise-sample --quality preview
 ```

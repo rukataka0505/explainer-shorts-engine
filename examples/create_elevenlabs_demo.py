@@ -1,4 +1,4 @@
-"""Reproduce the NASA edit with the default ElevenLabs voice and full captions."""
+"""Reproduce the NASA edit with ElevenLabs and full captions."""
 import json
 import sys
 from pathlib import Path
@@ -13,7 +13,7 @@ def main():
     fetch_demo()
     if not existed:
         project = json.loads(project_file.read_text(encoding='utf-8'))
-        project.pop('voices', None)
+        project['voices'] = {'narrator': {'provider': 'elevenlabs'}}
         project['title'] = 'ElevenLabs字幕検証'
         project.get('youtube', {}).pop('description', None)
         project_file.write_text(json.dumps(project, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
