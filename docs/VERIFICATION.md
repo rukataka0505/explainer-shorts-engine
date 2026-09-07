@@ -47,3 +47,10 @@ Press Site版は音声トラックがあっても選択区間のサンプルが�
 - ブラウザーで音声をミュートせず再生し、カット周辺の抜粋も作成。音声を聴取する入力は利用できず、声質・読みの聴感評価は未実施。
 - 配置変更後はgenerated=0 / reused=8。字幕文字時刻・本文欠落・破損キャッシュの回帰テストを含めPython 22件、JavaScript 5件、TypeScript型検査に成功。
 - 再現コードはexamples/create_elevenlabs_demo.py。素材と生成音声・MP4はprojects/elevenlabs-preview内だけに保存し、Git対象外。YouTube投稿なし。
+
+## CeVIO AI（2026-09-08）
+
+- 標準providerをCeVIO AIへ変更し、既定キャストを「さとうささら」に設定。ElevenLabsとVOICEVOXは明示指定で引き続き利用可能。
+- CeVIO AI公式Talk Extension APIの`ServiceControl2` / `Talker2` / `OutputWaveToFile`をWindows PowerShell 5.1経由で呼ぶ実装を追加。48kHz / 16bit / monoのWAVだけを採用し、本文・キャスト・設定・CeVIO本体バージョンを含むキーでキャッシュする。
+- Python単体テスト25件成功。CeVIOの既定キャスト、キャッシュ分離、ElevenLabs明示指定の互換性を含む。`compileall`と`git diff --check`も成功。
+- このPCでは`CeVIO.Talk.RemoteService2`がGACに存在せず、`tools/video.py check`はTalk Extension API未導入として停止した。そのため実際の「さとうささら」WAV生成と聴感確認は未実施。

@@ -5,6 +5,21 @@
     "fps": 30
   },
   "voice": {
+    "provider": "cevio",
+    "cast": "さとうささら"
+  },
+  "cevio": {
+    "provider": "cevio",
+    "cast": "さとうささら",
+    "settings": {
+      "Volume": 50,
+      "Speed": 50,
+      "Tone": 50,
+      "Alpha": 50,
+      "ToneScale": 50
+    }
+  },
+  "elevenlabs": {
     "provider": "elevenlabs",
     "voice_id": "W8wofKLOWnsM57L8hIx2",
     "name": "Koji",

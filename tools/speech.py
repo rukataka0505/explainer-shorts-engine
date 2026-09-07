@@ -5,6 +5,9 @@ import base64
 import math
 import json
 import os
+import shutil
+import subprocess
+import tempfile
 import urllib.parse
 import urllib.error
 import urllib.request
@@ -12,7 +15,7 @@ import wave
 from pathlib import Path
 from typing import Any
 
-from common import read_json, write_json
+from common import REPO_ROOT, read_json, write_json
 
 
 class ElevenLabs:
@@ -77,6 +80,92 @@ def synthesize_elevenlabs(client, cache, text, voice, settings):
     write_json(metadata, record)
     return {**record, 'path': str(sound)}, False
 
+
+class Cevio:
+    def __init__(self) -> None:
+        self.powershell = shutil.which("powershell.exe")
+        if not self.powershell:
+            raise ValueError("CeVIO AI連携にはWindows PowerShell 5.1が必要です")
+        self.bridge = REPO_ROOT / "tools" / "cevio.ps1"
+        identity = self.request({"action": "check"})
+        self.version = identity["host_version"]
+        self.casts = identity["casts"]
+
+    def request(self, payload: dict) -> dict:
+        request_path = None
+        try:
+            with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".json", delete=False) as request:
+                json.dump(payload, request, ensure_ascii=False)
+                request_path = Path(request.name)
+            result = subprocess.run(
+                [self.powershell, "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+                 "-File", str(self.bridge), str(request_path)],
+                check=False, capture_output=True, text=True, encoding="utf-8", errors="replace",
+            )
+            lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+            response = json.loads(lines[-1]) if lines else {}
+            if result.returncode or response.get("status") == "failed":
+                message = response.get("error")
+                if not message:
+                    message = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else "CeVIO AI連携に失敗しました"
+                raise ValueError(message)
+            return response
+        except json.JSONDecodeError:
+            raise ValueError("CeVIO AI連携から不正な応答が返りました") from None
+        finally:
+            if request_path:
+                request_path.unlink(missing_ok=True)
+
+    def identity(self, cast: str) -> dict:
+        if cast not in self.casts:
+            raise ValueError(f"CeVIO AIにキャストがありません: {cast}")
+        return {"name": cast, "cast": cast, "host_version": self.version}
+
+    def output_wave(self, text: str, cast: str, settings: dict, path: Path) -> dict:
+        self.identity(cast)
+        return self.request({"action": "synthesize", "text": text, "cast": cast,
+                             "settings": settings, "output": str(path.resolve())})
+
+
+def wav_info(path: Path) -> dict:
+    with wave.open(str(path), "rb") as wav:
+        frames = wav.getnframes()
+        data = wav.readframes(frames)
+        if frames <= 0 or len(data) != frames * wav.getnchannels() * wav.getsampwidth():
+            raise ValueError("破損したWAVです")
+        return {"duration": frames / wav.getframerate(), "sample_rate": wav.getframerate(),
+                "channels": wav.getnchannels(), "sample_width": wav.getsampwidth()}
+
+
+def synthesize_cevio(client: Cevio, cache: Path, text: str, voice: dict, settings: dict) -> tuple[dict, bool]:
+    cast = voice["cast"]
+    identity = client.identity(cast)
+    key_data = {"provider": "cevio", "text": text, "cast": cast, "settings": settings,
+                "host_version": client.version}
+    key = hashlib.sha256(json.dumps(key_data, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    sound, metadata = cache / f"{key}.wav", cache / f"{key}.json"
+    try:
+        record = read_json(metadata)
+        info = wav_info(sound)
+        if (record["key"] == key_data and record["sha256"] == hashlib.sha256(sound.read_bytes()).hexdigest()
+                and abs(info["duration"] - record["duration"]) < 1e-6
+                and info["sample_rate"] == 48000 and info["channels"] == 1 and info["sample_width"] == 2):
+            return {**record, **identity, "path": str(sound)}, True
+    except (OSError, ValueError, KeyError, wave.Error, EOFError):
+        pass
+    cache.mkdir(parents=True, exist_ok=True)
+    temporary = sound.with_suffix(".tmp.wav")
+    result = client.output_wave(text, cast, settings, temporary)
+    info = wav_info(temporary)
+    if info["sample_rate"] != 48000 or info["channels"] != 1 or info["sample_width"] != 2:
+        temporary.unlink(missing_ok=True)
+        raise ValueError("CeVIO AIの出力WAVが48kHz/16bit/monoではありません")
+    temporary.replace(sound)
+    record = {"key": key_data, "duration": info["duration"], "host_version": result.get("host_version", client.version),
+              "sha256": hashlib.sha256(sound.read_bytes()).hexdigest()}
+    write_json(metadata, record)
+    return {**record, **identity, "path": str(sound)}, False
+
 class Voicevox:
     def __init__(self) -> None:
         self.url = os.environ.get("VOICEVOX_URL", "http://127.0.0.1:50021").rstrip("/")
@@ -105,12 +194,7 @@ class Voicevox:
 
 
 def wav_duration(path: Path) -> float:
-    with wave.open(str(path), "rb") as wav:
-        frames = wav.getnframes()
-        data = wav.readframes(frames)
-        if frames <= 0 or len(data) != frames * wav.getnchannels() * wav.getsampwidth():
-            raise ValueError("破損したWAVです")
-        return frames / wav.getframerate()
+    return wav_info(path)["duration"]
 
 
 def synthesize(client: Voicevox, cache: Path, text: str, style_id: int, settings: dict) -> tuple[dict, bool]:

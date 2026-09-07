@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 from common import REPO_ROOT, ffprobe, final_output_path, find_executable, project_file, read_json, run, write_json
-from speech import Voicevox, ElevenLabs, synthesize, synthesize_elevenlabs
+from speech import Cevio, Voicevox, ElevenLabs, synthesize, synthesize_cevio, synthesize_elevenlabs
 from edit import compile_edit, frame, number
 
 
@@ -17,16 +17,25 @@ def load_project(root: Path) -> dict:
         raise ValueError("titleが必要です")
     if "scenes" in project or not isinstance(project.get("beats"), list) or not project["beats"]:
         raise ValueError("新形式のbeatsが必要です。旧形式の移行機能はありません")
-    voices = project.get("voices", {"narrator": dict(read_json(REPO_ROOT / "style.json")["voice"])})
+    style = read_json(REPO_ROOT / "style.json")
+    voices = project.get("voices", {"narrator": dict(style["voice"])})
     if not isinstance(voices, dict) or not voices:
         raise ValueError("voicesが空です")
     for name, voice in voices.items():
-        provider = voice.setdefault("provider", "voicevox" if "style_id" in voice else "elevenlabs")
+        inferred = ("voicevox" if "style_id" in voice else
+                    "elevenlabs" if "voice_id" in voice or "model_id" in voice else
+                    "cevio" if "cast" in voice else style["voice"]["provider"])
+        provider = voice.setdefault("provider", inferred)
         if provider == "elevenlabs":
-            defaults = read_json(REPO_ROOT / "style.json")["voice"]
+            defaults = style["elevenlabs"]
             voices[name] = {**defaults, **voice}
             if not isinstance(voices[name]["voice_id"], str) or not voices[name]["voice_id"].strip():
                 raise ValueError("ElevenLabs voice_idが必要です")
+        elif provider == "cevio":
+            defaults = style["cevio"]
+            voices[name] = {**defaults, **voice, "provider": "cevio"}
+            if not isinstance(voices[name].get("cast"), str) or not voices[name]["cast"].strip():
+                raise ValueError(f"voices.{name}.castはCeVIO AIのキャスト名です")
         elif provider == "voicevox":
             if not isinstance(voice.get("style_id"), int) or isinstance(voice["style_id"], bool):
                 raise ValueError(f"voices.{name}.style_idはVOICEVOXの整数IDです")
@@ -82,6 +91,7 @@ def prepare(root: Path, project: dict, client=None) -> dict:
     cursor = 0.0
     records, beats, anchors = [], [], {}
     reused = generated = 0
+    cevio = None
     for beat in project["beats"]:
         begin = cursor
         for line in beat.get("lines", []):
@@ -96,9 +106,13 @@ def prepare(root: Path, project: dict, client=None) -> dict:
             else:
                 voice = project["voices"][line.get("voice", next(iter(project["voices"])))]
                 if voice["provider"] == "elevenlabs":
-                    settings = {**style["voice"]["settings"], **voice.get("settings", {}), **line.get("settings", {})}
+                    settings = {**style["elevenlabs"]["settings"], **voice.get("settings", {}), **line.get("settings", {})}
                     record, cached = synthesize_elevenlabs(ElevenLabs(), root / "work" / "audio", line["text"], voice, settings)
                     captions = record["captions"]
+                elif voice["provider"] == "cevio":
+                    cevio = cevio or Cevio()
+                    settings = {**style["cevio"]["settings"], **voice.get("settings", {}), **line.get("settings", {})}
+                    record, cached = synthesize_cevio(cevio, root / "work" / "audio", line["text"], voice, settings)
                 else:
                     client = client or Voicevox()
                     settings = {**style["voicevox"]["settings"], **voice.get("settings", {}), **line.get("settings", {})}

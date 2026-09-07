@@ -153,33 +153,43 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=55)
     parser.add_argument("--at", type=float, default=0)
     parser.add_argument("--duration", type=float, default=0)
-    parser.add_argument("--voices", action="store_true", help="check時にElevenLabsの声一覧を表示")
+    parser.add_argument("--voices", action="store_true", help="check時に選択中サービスの声一覧を表示")
     args = parser.parse_args()
     root = args.project.resolve() if args.project else None
     if args.command == "check":
-        from speech import Voicevox, ElevenLabs
+        from speech import Cevio, Voicevox, ElevenLabs
         project = load_project(root) if root else None
         voices = project["voices"] if project else {"narrator": read_json(REPO_ROOT / "style.json")["voice"]}
         used = {line.get("voice", next(iter(voices))) for beat in project["beats"] for line in beat.get("lines", []) if "path" not in line} if project else set(voices)
         checked = {}
-        listing = None
+        listing = []
         for key in used:
             voice = voices[key]
-            if voice.get("provider", "elevenlabs") == "elevenlabs":
+            provider = voice.get("provider", "cevio")
+            if provider == "elevenlabs":
                 client = ElevenLabs()
                 identity = client.request("voices/" + voice["voice_id"])
                 checked[key] = {"provider": "elevenlabs", "name": identity["name"]}
+                if args.voices:
+                    listing.extend({"provider": "elevenlabs", "voice_id": v["voice_id"], "name": v["name"]} for v in client.request("voices")["voices"])
+            elif provider == "cevio":
+                client = Cevio()
+                checked[key] = {"provider": "cevio", **client.identity(voice["cast"])}
+                if args.voices:
+                    listing.extend({"provider": "cevio", "cast": cast, "name": cast} for cast in client.casts)
             else:
                 client = Voicevox()
                 checked[key] = {"provider": "voicevox", **client.identity(voice["style_id"])}
-        if args.voices:
-            listing = [{"voice_id": v["voice_id"], "name": v["name"]} for v in ElevenLabs().request("voices")["voices"]]
+                if args.voices:
+                    listing.extend({"provider": "voicevox", "style_id": style["id"], "name": voice_info["name"]}
+                                   for voice_info in client.voices for style in voice_info["styles"]
+                                   if style.get("type", "talk") == "talk")
         for name in ("node", "ffmpeg", "ffprobe"):
             if not find_executable(name):
                 raise ValueError(f"{name}が見つかりません")
         if not (REPO_ROOT / "remotion/node_modules/@remotion/renderer/package.json").is_file():
             raise ValueError("npm ci --prefix remotion を実行してください")
-        emit({"ready": True, "speech": checked, **({"voices": listing} if listing is not None else {})})
+        emit({"ready": True, "speech": checked, **({"voices": listing} if args.voices else {})})
         return 0
     if root is None:
         parser.error("projectディレクトリが必要です")
