@@ -6,7 +6,7 @@
 
 ## セットアップ
 
-Python 3.13、Node.js、Git、FFmpeg/ffprobe。標準音声はCeVIO AIの「さとうささら」。CeVIO AIのトーク機能と「さとうささら」をインストール・認証しておく。
+Python 3.13、Node.js、Git、FFmpeg/ffprobe。標準音声はElevenLabsのKoji（eleven_multilingual_v2）。ELEVENLABS_API_KEY環境変数を設定する。
 
 ```powershell
 $env:PYTHONUTF8 = '1'
@@ -16,7 +16,7 @@ npm.cmd ci --prefix remotion
 .\.venv\Scripts\python.exe tools/video.py check
 ```
 
-CeVIO AIは公式Talk Extension API（`CeVIO.Talk.RemoteService2.dll`）で連携する。通常はGACから自動で読み込み、特殊な配置では`CEVIO_REMOTE_SERVICE_DLL`でDLLを指定できる。VOICEVOXを未導入なら `winget install --id HiroshibaKazuyuki.VOICEVOX -e`。`VOICEVOX_URL`、`VOICEVOX_ENGINE`、`VIDEO_FFMPEG`、`VIDEO_FFPROBE`で接続先・実行ファイルを指定できる。録音済み音声を使う案件はTTSサービスなしでprepare/buildできる。
+VOICEVOXを未導入なら `winget install --id HiroshibaKazuyuki.VOICEVOX -e`。`VOICEVOX_URL`、`VOICEVOX_ENGINE`、`VIDEO_FFMPEG`、`VIDEO_FFPROBE`で接続先・実行ファイルを指定できる。VOICEVOXを明示選択した時の接続先はlocalhost:50021。録音済み音声を使う案件はVOICEVOXなしでprepare/buildできる。
 
 Remotion公式Agent Skillsは`.agents/skills/remotion-best-practices/`へ固定版を同梱。Remotion関連パッケージは同じバージョンに固定し、npmのlockfileを含む。
 
@@ -61,7 +61,7 @@ buildは背景実行。waitは最長55秒待ち、終わっていなければも
 ```json
 {
   "title": "ロケットを守る、水の壁",
-  "voices": {"narrator": {"provider": "cevio", "cast": "さとうささら"}},
+  "voices": {"narrator": {"provider": "elevenlabs"}},
   "beats": [{"id": "hook", "lines": [
     {"id": "q", "text": "この大量の水、何のためだと思う？", "gap": 0.2},
     {"id": "a", "text": "実は、ロケットを音から守っている。", "gap": 0.4}
@@ -82,7 +82,7 @@ buildは背景実行。waitは最長55秒待ち、終わっていなければも
 |---|---|
 | beats / lines | 意味のまとまりと発話。idは全体で一意。音声実尺＋gapから時間を決める。無言beatはdurationを指定 |
 | line.path | 録音音声の相対パス。指定時はTTSを呼ばない。textはその音声の実際の原稿を記す |
-| voices / line.settings | 省略時はCeVIO AIの「さとうささら」。CeVIOはprovider: cevioとcast、settingsでVolume/Speed/Tone/Alpha/ToneScale/Componentsを指定可。ElevenLabsはprovider: elevenlabs、VOICEVOXはprovider: voicevox。設定は共通→声→発話の順 |
+| voices / line.settings | 省略時はstyle.jsonのElevenLabs音声。provider、voice_id、model_id、settingsを指定可。VOICEVOXはprovider: voicevoxとstyle_id。設定は共通→声→発話の順 |
 | from / to | 全体先頭からの秒数、または`{"line":"id","edge":"startまたはend","offset":秒}`。全beatの発話を参照可。from省略は0、to省略は末尾 |
 | shots | 順番に並ぶ画。前のtoと次のfromを同じ参照でつなぎ、空白と重複を避ける。画像も使用可能 |
 | source_start / speed | 素材内の開始秒と再生倍率。映像の速度変更を使う時は必要な動作を見極める。音トラックは独立 |
@@ -126,18 +126,15 @@ npm.cmd test --prefix remotion
 
 ## 音声と全文字幕
 
-既定はCeVIO AI / さとうささら。`Volume`、`Speed`、`Tone`、`Alpha`、`ToneScale`は0～100、`Components`にはキャスト固有の感情名と値を指定できる。生成WAVは48kHz / 16bit / monoを検査してからキャッシュする。
+既定はElevenLabs / Koji / eleven_multilingual_v2。APIキーは環境変数のみから読み、ファイルやGitへ保存しない。
+公開Voice LibraryのKoji（voice_id: W8wofKLOWnsM57L8hIx2）を自分の声一覧へ追加して使う。別の声はstyle.jsonのvoice、または案件のvoicesで指定する。checkは選択したサービスと声を確認し、--voicesでElevenLabsの声一覧を表示する。録音だけの案件はAPI接続不要。
 
-ElevenLabs / Koji / eleven_multilingual_v2も選択可能。APIキーは環境変数のみから読み、ファイルやGitへ保存しない。公開Voice LibraryのKoji（voice_id: W8wofKLOWnsM57L8hIx2）を自分の声一覧へ追加して使う。VOICEVOXも従来通りprovider: voicevoxとstyle_idで選択できる。checkは選択したサービスと声を確認し、--voicesで利用可能な声を表示する。録音だけの案件はTTS接続不要。
-
-字幕はbeats[].lines[].textから生成し、本文を要約・書き換えない。ElevenLabsのwith-timestamps APIが返す原文の文字時刻で長文のページを切り替える。原文と文字時刻が一致しない場合はエラー。CeVIO AI・VOICEVOX・録音素材は発話全体の時間と文字数による分割のため、長い発話は短く分ける。生成音声の読み違いは試聴して直す。
+字幕はbeats[].lines[].textから生成し、本文を要約・書き換えない。ElevenLabsのwith-timestamps APIが返す原文の文字時刻で長文のページを切り替える。原文と文字時刻が一致しない場合はエラー。VOICEVOX・録音素材は従来同様に発話全体の時間と文字数による分割のため、長い発話は短く分ける。生成音声の読み違いは試聴して直す。
 
 元エンジンの日本語改行・保護単語とSubtitle描画を流用。既定はずんだもんと同じ緑 #66E07A・白内縁10px・黒外縁4px、帯なし。声とは独立した色設定。1080×1920基準のサイズ・位置をstyle.jsonのsubtitlesへ置き、案件のsubtitlesで上書きできる。字幕原稿は別に作らない。
 音声は本文・声・モデル・設定を含むキャッシュで再利用し、字幕の配置変更だけでは再課金されない。
 
-CeVIO AI API仕様: https://cevio.jp/guide/cevio_ai/interface/dotnet/
-
-ElevenLabs API仕様: https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps
+API仕様: https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps
 
 検証用サンプルの再現:
 ```powershell

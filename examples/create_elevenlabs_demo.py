@@ -13,7 +13,7 @@ def main():
     fetch_demo()
     if not existed:
         project = json.loads(project_file.read_text(encoding='utf-8'))
-        project['voices'] = {'narrator': {'provider': 'elevenlabs'}}
+        project.pop('voices', None)
         project['title'] = 'ElevenLabs字幕検証'
         project.get('youtube', {}).pop('description', None)
         project_file.write_text(json.dumps(project, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
