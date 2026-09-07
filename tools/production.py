@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 from common import REPO_ROOT, ffprobe, final_output_path, find_executable, project_file, read_json, run, write_json
-from speech import Voicevox, synthesize
+from speech import Voicevox, ElevenLabs, synthesize, synthesize_elevenlabs
 from edit import compile_edit, frame, number
 
 
@@ -17,12 +17,21 @@ def load_project(root: Path) -> dict:
         raise ValueError("titleが必要です")
     if "scenes" in project or not isinstance(project.get("beats"), list) or not project["beats"]:
         raise ValueError("新形式のbeatsが必要です。旧形式の移行機能はありません")
-    voices = project.get("voices", {"narrator": {"style_id": 3}})
+    voices = project.get("voices", {"narrator": dict(read_json(REPO_ROOT / "style.json")["voice"])})
     if not isinstance(voices, dict) or not voices:
         raise ValueError("voicesが空です")
     for name, voice in voices.items():
-        if not isinstance(voice.get("style_id"), int) or isinstance(voice["style_id"], bool):
-            raise ValueError(f"voices.{name}.style_idはVOICEVOXの整数IDです")
+        provider = voice.setdefault("provider", "voicevox" if "style_id" in voice else "elevenlabs")
+        if provider == "elevenlabs":
+            defaults = read_json(REPO_ROOT / "style.json")["voice"]
+            voices[name] = {**defaults, **voice}
+            if not isinstance(voices[name]["voice_id"], str) or not voices[name]["voice_id"].strip():
+                raise ValueError("ElevenLabs voice_idが必要です")
+        elif provider == "voicevox":
+            if not isinstance(voice.get("style_id"), int) or isinstance(voice["style_id"], bool):
+                raise ValueError(f"voices.{name}.style_idはVOICEVOXの整数IDです")
+        else:
+            raise ValueError(f"未対応の音声provider: {provider}")
     ids: set[str] = set()
     for beat in project["beats"]:
         for item in [beat, *beat.get("lines", [])]:
@@ -76,6 +85,7 @@ def prepare(root: Path, project: dict, client=None) -> dict:
     for beat in project["beats"]:
         begin = cursor
         for line in beat.get("lines", []):
+            captions = None
             if "path" in line:
                 path = asset(root, line["path"])
                 info = ffprobe(root / path)
@@ -84,10 +94,15 @@ def prepare(root: Path, project: dict, client=None) -> dict:
                 seconds = float(info["format"]["duration"])
                 voice_name = line.get("credit", "recorded narration")
             else:
-                client = client or Voicevox()
                 voice = project["voices"][line.get("voice", next(iter(project["voices"])))]
-                settings = {**style["voice"]["settings"], **voice.get("settings", {}), **line.get("settings", {})}
-                record, cached = synthesize(client, root / "work" / "audio", line["text"], voice["style_id"], settings)
+                if voice["provider"] == "elevenlabs":
+                    settings = {**style["voice"]["settings"], **voice.get("settings", {}), **line.get("settings", {})}
+                    record, cached = synthesize_elevenlabs(ElevenLabs(), root / "work" / "audio", line["text"], voice, settings)
+                    captions = record["captions"]
+                else:
+                    client = client or Voicevox()
+                    settings = {**style["voicevox"]["settings"], **voice.get("settings", {}), **line.get("settings", {})}
+                    record, cached = synthesize(client, root / "work" / "audio", line["text"], voice["style_id"], settings)
                 reused += int(cached)
                 generated += int(not cached)
                 seconds, voice_name = record["duration"], record["name"]
@@ -97,7 +112,7 @@ def prepare(root: Path, project: dict, client=None) -> dict:
             last = first + math.ceil(seconds * fps)
             anchors[line["id"]] = {"start": first / fps, "end": last / fps}
             records.append({"id": line["id"], "beat": beat["id"], "text": line["text"],
-                            "from": first, "to": last, "path": path, "duration": seconds, "voice_name": voice_name})
+                            "from": first, "to": last, "path": path, "duration": seconds, "voice_name": voice_name, "captions": captions})
             cursor = last / fps + line.get("gap", style["audio"]["gap"])
         requested = beat.get("duration", cursor - begin)
         if requested < cursor - begin - 1e-6:
@@ -117,12 +132,19 @@ def prepare(root: Path, project: dict, client=None) -> dict:
             warnings.append(f"選択した音素材の区間は無音です: {sound['path']} @ {sound.get('source_start', 0):.3f}s")
     result = {"title": project["title"], "video": video, "durationInFrames": frame(cursor, fps),
               "lines": records, "beats": beats, "shots": shots, "audio": audio,
+              "subtitles": {**style["subtitles"], **project.get("subtitles", {})},
               "mix": style["audio"], "warnings": warnings, "speech": {"generated": generated, "reused": reused}}
     write_json(root / "work" / "timing.json", result)
     return result
 
 
 def validate_output(root: Path, project: dict, timing: dict, output: Path, quality: str) -> dict:
+    wanted = [(line["id"], line["text"]) for beat in project["beats"] for line in beat.get("lines", [])]
+    if [(line["id"], line["text"]) for line in timing["lines"]] != wanted:
+        raise ValueError("字幕・音声本文が台本と一致しません")
+    for line in timing["lines"]:
+        if line.get("captions") is not None and "".join(c["text"] for c in line["captions"]) != line["text"]:
+            raise ValueError("字幕本文が音声原稿と一致しません")
     info = ffprobe(output)
     video = next((s for s in info["streams"] if s["codec_type"] == "video"), None)
     audio = next((s for s in info["streams"] if s["codec_type"] == "audio"), None)

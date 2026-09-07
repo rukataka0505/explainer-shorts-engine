@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import ts from 'typescript';
 const source = fs.readFileSync(new URL('./src/timing.ts', import.meta.url), 'utf8');
 const js = ts.transpileModule(source, {compilerOptions: {target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ESNext}}).outputText;
-const {cameraAt, coverRect, soundVolume} = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+const {cameraAt, coverRect, soundVolume, captionAt, captionParts, captionLines} = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 test('portrait crop follows source focus without exposing empty pixels, including both edges', () => {
   for (const x of [0, .2, .5, .9, 1]) for (const y of [0, .5, 1]) for (const zoom of [1, 1.3, 2]) {
     const r = coverRect(3840, 2160, 1080, 1920, {x, y, zoom});
@@ -28,4 +28,18 @@ test('a J-cut retains source sound before the picture, ducks under narration and
   assert.ok(Math.abs(soundVolume(s,40,30,lines,mix)-.1)<1e-7);
   assert.equal(soundVolume(s,80,30,lines,mix),.5);
   assert.equal(soundVolume({...s,fade_in:1},0,30,lines,mix),0);
+});
+
+test('caption pages preserve every character, punctuation and protected words', () => {
+  for (const text of ['この大量の水、何のためだと思う？', '音のエネルギーを弱めて、機体への負担を減らす。', 'NASAのロケット。水🚀を使う。']) {
+    const pages = captionParts(text, 12);
+    assert.equal(pages.join(''), text);
+    assert.equal(pages.map(p => captionLines(p, 6).replaceAll('\n', '')).join(''), text);
+  }
+});
+test('caption page changes follow the next spoken character, not text-length timing', () => {
+  const line = {text: '水が機体を守る。', duration: 4, captions: Array.from('水が機体を守る。').map((text, i) => ({text, startMs: [0,100,200,300,2500,2600,2800,3000][i]}))};
+  assert.equal(captionAt(line, 2499, 4), '水が機体');
+  assert.equal(captionAt(line, 2500, 4), 'を守る。');
+  assert.equal(captionAt({...line, captions: null}, 1999, 4), '水が機体');
 });

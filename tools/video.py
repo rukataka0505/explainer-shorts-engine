@@ -153,23 +153,33 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=55)
     parser.add_argument("--at", type=float, default=0)
     parser.add_argument("--duration", type=float, default=0)
-    parser.add_argument("--voices", action="store_true", help="check時にVOICEVOXの声一覧を表示")
+    parser.add_argument("--voices", action="store_true", help="check時にElevenLabsの声一覧を表示")
     args = parser.parse_args()
     root = args.project.resolve() if args.project else None
     if args.command == "check":
-        from speech import Voicevox
+        from speech import Voicevox, ElevenLabs
         project = load_project(root) if root else None
-        needs_voicevox = args.voices or project is None or any("path" not in line for beat in project["beats"] for line in beat.get("lines", []))
-        client = Voicevox() if needs_voicevox else None
+        voices = project["voices"] if project else {"narrator": read_json(REPO_ROOT / "style.json")["voice"]}
+        used = {line.get("voice", next(iter(voices))) for beat in project["beats"] for line in beat.get("lines", []) if "path" not in line} if project else set(voices)
+        checked = {}
+        listing = None
+        for key in used:
+            voice = voices[key]
+            if voice.get("provider", "elevenlabs") == "elevenlabs":
+                client = ElevenLabs()
+                identity = client.request("voices/" + voice["voice_id"])
+                checked[key] = {"provider": "elevenlabs", "name": identity["name"]}
+            else:
+                client = Voicevox()
+                checked[key] = {"provider": "voicevox", **client.identity(voice["style_id"])}
+        if args.voices:
+            listing = [{"voice_id": v["voice_id"], "name": v["name"]} for v in ElevenLabs().request("voices")["voices"]]
         for name in ("node", "ffmpeg", "ffprobe"):
             if not find_executable(name):
                 raise ValueError(f"{name}が見つかりません")
-        if project and client:
-            for voice in project["voices"].values():
-                client.identity(voice["style_id"])
         if not (REPO_ROOT / "remotion/node_modules/@remotion/renderer/package.json").is_file():
             raise ValueError("npm ci --prefix remotion を実行してください")
-        emit({"ready": True, "voicevox": client.version if client else "not required", **({"voices": [{"name": v["name"], "styles": v["styles"]} for v in client.voices]} if args.voices else {})})
+        emit({"ready": True, "speech": checked, **({"voices": listing} if listing is not None else {})})
         return 0
     if root is None:
         parser.error("projectディレクトリが必要です")

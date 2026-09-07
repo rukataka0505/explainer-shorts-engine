@@ -26,3 +26,45 @@ export function soundVolume(sound: Sound, local: number, fps: number, lines: {fr
   }
   return Math.max(0, (sound.volume ?? 1) * fadeIn * fadeOut * duck);
 }
+
+const captionTokens = (text: string): string[] =>
+  text.match(/[A-Za-z0-9][A-Za-z0-9._+:/-]*|[ァ-ヺー]+|[\s\S]/gu) ?? [];
+
+export const captionParts = (text: string, maxChars = 42): string[] => {
+  const limit = Math.max(1, Math.floor(maxChars));
+  const tokens = captionTokens(text);
+  const parts: string[] = [];
+  let current = '';
+  for (const token of tokens) {
+    if (current.length + token.length > limit && current && !/^[、。！？!?）」』]/u.test(token)) {parts.push(current); current = '';}
+    current += token;
+  }
+  if (current) parts.push(current);
+  return parts;
+};
+
+export const captionLines = (text: string, maxCharsPerLine = 21): string => {
+  const limit = Math.max(1, Math.floor(maxCharsPerLine));
+  const tokens = captionTokens(text.replace(/\r\n/g, '\n'));
+  const lines: string[] = [''];
+  for (const token of tokens) {
+    if (token === '\n') {lines.push(''); continue;}
+    const current = lines[lines.length - 1];
+    if (current.length + token.length > limit && current && !/^[、。！？!?）」』]/u.test(token)) lines.push(token);
+    else lines[lines.length - 1] += token;
+  }
+  return lines.join('\n');
+};
+
+
+export function captionAt(line: {text: string; duration: number; captions?: {text: string; startMs: number}[] | null}, elapsedMs: number, pageChars: number): string {
+  const parts = captionParts(line.text, pageChars);
+  let offset = 0;
+  return parts.find((text, i) => {
+    offset += text.length;
+    let count = 0;
+    const next = line.captions?.find(c => {const start = count; count += c.text.length; return start >= offset;});
+    const end = i === parts.length - 1 ? Infinity : next?.startMs ?? offset / line.text.length * line.duration * 1000;
+    return elapsedMs < end;
+  }) ?? '';
+}

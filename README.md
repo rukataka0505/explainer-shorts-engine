@@ -2,22 +2,21 @@
 
 実写・記録映像と音で説明する、ローカルのShorts制作エンジン。Codexが調査・素材選択・編集を担当し、Remotionで1080×1920へ仕上げる。
 
-固定のタイトル画面、図解、全文字幕、立ち絵は入れない。素材のいい瞬間を選び、画の切り替え・縦構図・現場音・声の間を編集する。[編集手順](docs/EDITING.md)と[根拠・設計判断](docs/SOURCES.md)を参照。
+全文字幕はナレーションと同じ本文から表示する。固定のタイトル画面、図解、立ち絵は入れない。素材のいい瞬間を選び、画の切り替え・縦構図・現場音・声の間を編集する。[編集手順](docs/EDITING.md)と[根拠・設計判断](docs/SOURCES.md)を参照。
 
 ## セットアップ
 
-Python 3.13、Node.js、Git、FFmpeg/ffprobe。合成音声を使う時はローカルのVOICEVOXも必要。
+Python 3.13、Node.js、Git、FFmpeg/ffprobe。標準音声はElevenLabsのKoji（eleven_multilingual_v2）。ELEVENLABS_API_KEY環境変数を設定する。
 
 ```powershell
 $env:PYTHONUTF8 = '1'
 py -3.13 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 npm.cmd ci --prefix remotion
-powershell -ExecutionPolicy Bypass -File tools/start_voicevox.ps1
 .\.venv\Scripts\python.exe tools/video.py check
 ```
 
-VOICEVOXを未導入なら `winget install --id HiroshibaKazuyuki.VOICEVOX -e`。`VOICEVOX_URL`、`VOICEVOX_ENGINE`、`VIDEO_FFMPEG`、`VIDEO_FFPROBE`で接続先・実行ファイルを指定できる。既定はVOICEVOXのlocalhost:50021。録音済み音声を使う案件はVOICEVOXなしでprepare/buildできる。
+VOICEVOXを未導入なら `winget install --id HiroshibaKazuyuki.VOICEVOX -e`。`VOICEVOX_URL`、`VOICEVOX_ENGINE`、`VIDEO_FFMPEG`、`VIDEO_FFPROBE`で接続先・実行ファイルを指定できる。VOICEVOXを明示選択した時の接続先はlocalhost:50021。録音済み音声を使う案件はVOICEVOXなしでprepare/buildできる。
 
 Remotion公式Agent Skillsは`.agents/skills/remotion-best-practices/`へ固定版を同梱。Remotion関連パッケージは同じバージョンに固定し、npmのlockfileを含む。
 
@@ -30,7 +29,7 @@ Remotion公式Agent Skillsは`.agents/skills/remotion-best-practices/`へ固定�
 .\.venv\Scripts\python.exe tools/video.py review projects/demo-water --quality preview
 ```
 
-NASAの4K元映像3本を約720MBダウンロードし、別の同一打ち上げ記録から15秒の現場音を抽出する。完成した編集指定を使い、約24秒の「ロケットを守る、水の壁」を再現する。声はVOICEVOX:青山龍星。APIや配布ファイルはNASA側で変更される可能性がある。
+NASAの4K元映像3本を約720MBダウンロードし、別の同一打ち上げ記録から15秒の現場音を抽出する。完成した編集指定を使い、約24秒の「ロケットを守る、水の壁」を再現する。この旧サンプルはVOICEVOX:青山龍星を明示指定している。通常の既定音声はElevenLabs。APIや配布ファイルはNASA側で変更される可能性がある。
 
 `review`が返すHTMLを開くと、動画と各ショットの頭・中・末尾を見比べられる。画像を押すとその時刻へ移動する。これは編集確認用で、完成動画に文字や画像一覧が入ることはない。
 
@@ -62,7 +61,7 @@ buildは背景実行。waitは最長55秒待ち、終わっていなければも
 ```json
 {
   "title": "ロケットを守る、水の壁",
-  "voices": {"narrator": {"style_id": 13}},
+  "voices": {"narrator": {"provider": "elevenlabs"}},
   "beats": [{"id": "hook", "lines": [
     {"id": "q", "text": "この大量の水、何のためだと思う？", "gap": 0.2},
     {"id": "a", "text": "実は、ロケットを音から守っている。", "gap": 0.4}
@@ -83,7 +82,7 @@ buildは背景実行。waitは最長55秒待ち、終わっていなければも
 |---|---|
 | beats / lines | 意味のまとまりと発話。idは全体で一意。音声実尺＋gapから時間を決める。無言beatはdurationを指定 |
 | line.path | 録音音声の相対パス。指定時はTTSを呼ばない。textはその音声の実際の原稿を記す |
-| voices / line.settings | style_idとVOICEVOXの数値設定。共通→声→発話の順で適用 |
+| voices / line.settings | 省略時はstyle.jsonのElevenLabs音声。provider、voice_id、model_id、settingsを指定可。VOICEVOXはprovider: voicevoxとstyle_id。設定は共通→声→発話の順 |
 | from / to | 全体先頭からの秒数、または`{"line":"id","edge":"startまたはend","offset":秒}`。全beatの発話を参照可。from省略は0、to省略は末尾 |
 | shots | 順番に並ぶ画。前のtoと次のfromを同じ参照でつなぎ、空白と重複を避ける。画像も使用可能 |
 | source_start / speed | 素材内の開始秒と再生倍率。映像の速度変更を使う時は必要な動作を見極める。音トラックは独立 |
@@ -91,7 +90,7 @@ buildは背景実行。waitは最長55秒待ち、終わっていなければも
 | fit | coverが既定。全体を見る必要がある画のみcontain。camera.zoomと組み合わせ可能 |
 | reason | 任意の短い編集意図。reviewに表示される |
 | audio | 現場音、SE、音楽。映像ファイルの音声も指定可能。音量、フェード、duck、音楽のloopを設定 |
-| research / youtube | 調査根拠・留保、YouTube説明欄とクレジット。作品内に文字は描画しない |
+| research / youtube | 調査根拠・留保、YouTube説明欄とクレジット。これらのメタデータは作品内に描画しない |
 
 時刻をフレームへ一度確定してから描画する。元素材の音は映像側ではミュートされるため、使用時はaudioへ明示する。素材が短い場合はエラーにし、映像をループや静止で水増ししない。音源の長い末尾無音などは必要に応じてFFmpegで事前に整える。
 
@@ -124,3 +123,21 @@ npm.cmd test --prefix remotion
 ```
 
 元エンジンから音声キャッシュ、背景ジョブ、検査と非公開納品を継承。新エンジンは元フォルダに依存せず動く。`projects/`、素材、生成動画、認証情報はGit対象外。`examples/`に再現用の編集指定と素材取得コードを残す。
+
+## 音声と全文字幕
+
+既定はElevenLabs / Koji / eleven_multilingual_v2。APIキーは環境変数のみから読み、ファイルやGitへ保存しない。
+公開Voice LibraryのKoji（voice_id: W8wofKLOWnsM57L8hIx2）を自分の声一覧へ追加して使う。別の声はstyle.jsonのvoice、または案件のvoicesで指定する。checkは選択したサービスと声を確認し、--voicesでElevenLabsの声一覧を表示する。録音だけの案件はAPI接続不要。
+
+字幕はbeats[].lines[].textから生成し、本文を要約・書き換えない。ElevenLabsのwith-timestamps APIが返す原文の文字時刻で長文のページを切り替える。原文と文字時刻が一致しない場合はエラー。VOICEVOX・録音素材は従来同様に発話全体の時間と文字数による分割のため、長い発話は短く分ける。生成音声の読み違いは試聴して直す。
+
+元エンジンの日本語改行・保護単語とSubtitle描画を流用。既定はずんだもんと同じ緑 #66E07A・白内縁10px・黒外縁4px、帯なし。声とは独立した色設定。1080×1920基準のサイズ・位置をstyle.jsonのsubtitlesへ置き、案件のsubtitlesで上書きできる。字幕原稿は別に作らない。
+音声は本文・声・モデル・設定を含むキャッシュで再利用し、字幕の配置変更だけでは再課金されない。
+
+API仕様: https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps
+
+検証用サンプルの再現:
+```powershell
+.\.venv\Scripts\python.exe examples/create_elevenlabs_demo.py
+.\.venv\Scripts\python.exe tools/video.py build projects/elevenlabs-preview --quality preview
+```
