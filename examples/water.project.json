@@ -1,0 +1,353 @@
+{
+  "title": "ロケットを守る、水の壁",
+  "voices": {
+    "narrator": {
+      "style_id": 13
+    }
+  },
+  "beats": [
+    {
+      "id": "cold-open",
+      "duration": 0.5
+    },
+    {
+      "id": "hook",
+      "lines": [
+        {
+          "id": "h1",
+          "text": "この大量の水、何のためだと思う？",
+          "gap": 0.25
+        },
+        {
+          "id": "h2",
+          "text": "実は、ロケットを音から守っている。",
+          "gap": 0.16
+        }
+      ]
+    },
+    {
+      "id": "cause",
+      "lines": [
+        {
+          "id": "c1",
+          "text": "発射の瞬間、強烈な音と圧力の波が発生する。",
+          "gap": 0.08
+        },
+        {
+          "id": "c2",
+          "text": "機体や発射台を傷めるほどのエネルギーだ。",
+          "gap": 0.18
+        }
+      ]
+    },
+    {
+      "id": "answer",
+      "lines": [
+        {
+          "id": "a1",
+          "text": "そこで、エンジンの下へ一気に水を流す。",
+          "gap": 0.1
+        },
+        {
+          "id": "a2",
+          "text": "音のエネルギーを弱めて、機体への負担を減らす。",
+          "gap": 0.15
+        }
+      ]
+    },
+    {
+      "id": "payoff",
+      "lines": [
+        {
+          "id": "p1",
+          "text": "この試験では、約百七十万リットル。",
+          "gap": 0.12
+        },
+        {
+          "id": "p2",
+          "text": "ロケットを守る、水の壁なんだ。",
+          "gap": 0.45
+        }
+      ]
+    }
+  ],
+  "shots": [
+    {
+      "id": "spray-close",
+      "path": "assets/water.mp4",
+      "source_start": 60.8666666667,
+      "from": 0,
+      "camera": [
+        {
+          "at": 0,
+          "x": 0.46,
+          "y": 0.5,
+          "zoom": 1
+        }
+      ],
+      "reason": "噴出が頂点にある実写から始める。最終カットの直後の動作へ接続できる素材位置。",
+      "to": 1.4
+    },
+    {
+      "id": "reveal-scale",
+      "path": "assets/water.mp4",
+      "source_start": 33,
+      "from": 1.4,
+      "camera": [
+        {
+          "at": 0,
+          "x": 0.53,
+          "y": 0.6,
+          "zoom": 1
+        }
+      ],
+      "reason": "寄りから全景へ切り替え、発射台を水が覆う大きさを見せる。",
+      "to": {
+        "line": "h2",
+        "offset": 0
+      }
+    },
+    {
+      "id": "look-down",
+      "path": "assets/drone.mp4",
+      "source_start": 13,
+      "from": {
+        "line": "h2",
+        "offset": 0
+      },
+      "camera": [
+        {
+          "at": 0,
+          "x": 0.24,
+          "y": 0.5,
+          "zoom": 1
+        },
+        {
+          "at": 1,
+          "x": 0.27,
+          "y": 0.5,
+          "zoom": 1
+        }
+      ],
+      "reason": "水煙だけにならない早いテイクを選び、左側の放水口と流れを縦構図で追う。",
+      "to": {
+        "line": "c1",
+        "offset": -0.3
+      }
+    },
+    {
+      "id": "ignition",
+      "path": "assets/launch.mp4",
+      "source_start": 49,
+      "from": {
+        "line": "c1",
+        "offset": -0.3
+      },
+      "camera": [
+        {
+          "at": 0,
+          "x": 0.5,
+          "y": 0.5,
+          "zoom": 1
+        }
+      ],
+      "reason": "発射という語に先行して点火を見せる。動きのある原寸の画を保持する。",
+      "to": {
+        "line": "c2",
+        "offset": 1
+      }
+    },
+    {
+      "id": "pressure",
+      "path": "assets/launch.mp4",
+      "source_start": 56,
+      "from": {
+        "line": "c2",
+        "offset": 1
+      },
+      "camera": [
+        {
+          "at": 0,
+          "x": 0.5,
+          "y": 0.6,
+          "zoom": 1.15
+        }
+      ],
+      "reason": "噴射の細部へ視点を寄せ、力の大きさを見せる。損傷映像とは扱わない。",
+      "to": {
+        "line": "a1",
+        "offset": -0.12
+      }
+    },
+    {
+      "id": "water-entry",
+      "path": "assets/water.mp4",
+      "source_start": 64.4,
+      "from": {
+        "line": "a1",
+        "offset": -0.12
+      },
+      "camera": [
+        {
+          "at": 0,
+          "x": 0.79,
+          "y": 0.55,
+          "zoom": 1
+        }
+      ],
+      "reason": "右側の放水口を中心に置き、空だけの切り抜きを避けて水の入り口を見せる。",
+      "to": {
+        "line": "a1",
+        "offset": 1.35
+      }
+    },
+    {
+      "id": "water-wall",
+      "path": "assets/water.mp4",
+      "source_start": 76,
+      "from": {
+        "line": "a1",
+        "offset": 1.35
+      },
+      "camera": [
+        {
+          "at": 0,
+          "x": 0.5,
+          "y": 0.63,
+          "zoom": 1
+        }
+      ],
+      "reason": "水が発射台を覆う画へ動作の連続でつなぐ。",
+      "to": {
+        "line": "a2",
+        "offset": 1
+      }
+    },
+    {
+      "id": "top-flow",
+      "path": "assets/drone.mp4",
+      "source_start": 16.7,
+      "from": {
+        "line": "a2",
+        "offset": 1
+      },
+      "camera": [
+        {
+          "at": 0,
+          "x": 0.78,
+          "y": 0.55,
+          "zoom": 1
+        }
+      ],
+      "reason": "反対側から同じ放水口と水の動きを見せる。煙だけで構造が隠れる後半は使わない。",
+      "to": {
+        "line": "p1",
+        "offset": 0
+      }
+    },
+    {
+      "id": "quantity",
+      "path": "assets/water.mp4",
+      "source_start": 36,
+      "from": {
+        "line": "p1",
+        "offset": 0
+      },
+      "camera": [
+        {
+          "at": 0,
+          "x": 0.53,
+          "y": 0.6,
+          "zoom": 1
+        }
+      ],
+      "reason": "2019年9月13日の当該試験へ戻って量を説明する。数字テロップは置かない。",
+      "to": {
+        "line": "p2",
+        "offset": 0
+      }
+    },
+    {
+      "id": "payoff",
+      "path": "assets/water.mp4",
+      "source_start": 58.1,
+      "from": {
+        "line": "p2",
+        "offset": 0
+      },
+      "camera": [
+        {
+          "at": 0,
+          "x": 0.46,
+          "y": 0.5,
+          "zoom": 1
+        }
+      ],
+      "reason": "水の壁という締めを実写で回収。終端を冒頭の動作へつなげる。"
+    }
+  ],
+  "audio": [
+    {
+      "path": "assets/water.mp4",
+      "role": "現場の水音",
+      "from": 0,
+      "to": {
+        "line": "c1",
+        "offset": -0.2
+      },
+      "source_start": 60.8666666667,
+      "volume": 0.48,
+      "duck": true,
+      "fade_in": 0.05,
+      "fade_out": 0.25
+    },
+    {
+      "path": "assets/launch-sound.wav",
+      "role": "J/Lカットの発射音",
+      "from": {
+        "line": "c1",
+        "offset": -0.6
+      },
+      "to": {
+        "line": "a1",
+        "offset": 0.15
+      },
+      "source_start": 0,
+      "volume": 0.28,
+      "duck": true,
+      "fade_in": 0.25,
+      "fade_out": 0.35
+    },
+    {
+      "path": "assets/water.mp4",
+      "role": "答えから結末へ続く水音",
+      "from": {
+        "line": "a1",
+        "offset": -0.25
+      },
+      "source_start": 64.27,
+      "volume": 0.48,
+      "duck": true,
+      "fade_in": 0.2,
+      "fade_out": 0.18
+    }
+  ],
+  "research": [
+    {
+      "url": "https://www.nasa.gov/centers-and-facilities/kennedy/pad-39b-water-flow-test-comes-through-loud-and-clear/",
+      "supports": "2019年9月13日の試験で450000米ガロン、約170万リットル。現在の全ミッション共通の水量ではない。"
+    },
+    {
+      "url": "https://nas.nasa.gov/pubs/stories/2021/feature_LAVA_contributes_to_astronaut_safety.html",
+      "supports": "水が、ペイロードなどを損傷しうる圧力波を弱める。"
+    },
+    {
+      "url": "https://images.nasa.gov/details/KSC-20221116-MH-WEL01-0001-Artemis_I_Launch_Imagery-3319254",
+      "supports": "同じArtemis I打ち上げの別収録から現場音を使用。35秒以降の15秒間を抽出。元のPress Site映像は音声トラックが無音。"
+    }
+  ],
+  "youtube": {
+    "description": "NASAの2019年9月の放水試験とArtemis Iの打ち上げ映像で、発射台の水の役割を説明します。\n映像: NASA / Kennedy Space Center\nVOICEVOX:青山龍星\n参考: https://www.nasa.gov/centers-and-facilities/kennedy/pad-39b-water-flow-test-comes-through-loud-and-clear/",
+    "category_id": "28"
+  }
+}

@@ -1,0 +1,11 @@
+projects/
+.cache/
+.venv/
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.*
+*client-secret*
+*oauth-token*
+*.log

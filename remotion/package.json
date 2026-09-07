@@ -1,0 +1,23 @@
+{
+  "name": "shorts-editor",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test timing.test.mjs",
+    "studio": "remotion studio --no-open"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.521",
+    "@remotion/cli": "4.0.521",
+    "@remotion/media": "4.0.521",
+    "@remotion/renderer": "4.0.521",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "remotion": "4.0.521"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "video": {"width": 1080, "height": 1920, "fps": 30},
+  "voice": {"settings": {"speedScale": 1.1, "intonationScale": 1.05, "prePhonemeLength": 0.04, "postPhonemeLength": 0.06}},
+  "audio": {"gap": 0.12, "duck_volume": 0.22, "duck_seconds": 0.16}
+}
