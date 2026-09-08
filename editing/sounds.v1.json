@@ -1,0 +1,418 @@
+{
+  "version": 1,
+  "note": "編集用アクセント。現場の記録音ではない。用途名は検索候補であり適合性の保証ではない。",
+  "sounds": [
+    {
+      "id": "kenney_click_001",
+      "label": "小さなクリック",
+      "tags": [
+        "確認",
+        "注目",
+        "click"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/click_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "ea67c9d78750e5a356bf53ef8c2063b52cc3ccdae6ae8afeec87f97f79ae692d",
+      "duration": 0.11466666666666667,
+      "peak_dbfs": -1.43,
+      "marker": 0.001146,
+      "volume": 0.2097,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_click_003",
+      "label": "別種のクリック",
+      "tags": [
+        "確認",
+        "click"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/click_003.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "b035afe3fe08b0fd3517c612bdfd362799bffe762d2cbf8f09e6a50322067358",
+      "duration": 0.018875,
+      "peak_dbfs": -1.444,
+      "marker": 0.000104,
+      "volume": 0.21,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_switch_001",
+      "label": "スイッチ",
+      "tags": [
+        "切替",
+        "switch"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/switch_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "56a1dd5278d06b4c47c69d7664482bcb3feeac3027fdd8cb6d0883fda7738eb2",
+      "duration": 0.6196875,
+      "peak_dbfs": 1.983,
+      "marker": 0.107833,
+      "volume": 0.1415,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_switch_004",
+      "label": "硬いスイッチ",
+      "tags": [
+        "切替",
+        "switch"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/switch_004.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "70826a511743c6683894b1040e939794e3b083b403ca750340546125fe1fe652",
+      "duration": 0.5035833333333334,
+      "peak_dbfs": 2.235,
+      "marker": 0.107396,
+      "volume": 0.1375,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_tick_001",
+      "label": "短い刻み",
+      "tags": [
+        "列挙",
+        "tick"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/tick_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "fee217e21731da4be1f0347fd2632296259b8bfdca343c936fe60dc64bce280e",
+      "duration": 0.045,
+      "peak_dbfs": 0.536,
+      "marker": 0.000583,
+      "volume": 0.1672,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_select_001",
+      "label": "選択のアクセント",
+      "tags": [
+        "注目",
+        "select"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/select_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "3d9e86003f8ebd1a3f6f3d8af65b6b682562a46d532ccd204dcba21305b950ff",
+      "duration": 0.06241666666666667,
+      "peak_dbfs": 1.91,
+      "marker": 0.001854,
+      "volume": 0.1427,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_select_006",
+      "label": "選択の別テイク",
+      "tags": [
+        "注目",
+        "select"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/select_006.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "f62c605bdea38edd8b1a88e9806d96ac19df43ccfedcc0f424ed156c455341e1",
+      "duration": 1.9490416666666666,
+      "peak_dbfs": -0.771,
+      "marker": 0.036,
+      "volume": 0.1943,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_confirmation_001",
+      "label": "確認の合図",
+      "tags": [
+        "納得",
+        "確認",
+        "confirmation"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/confirmation_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "f9d0ef5a5c740c2ac250ac3876db9e4340669044a5bf78ae09192918db3e2ebc",
+      "duration": 0.29460416666666667,
+      "peak_dbfs": -0.927,
+      "marker": 0.000667,
+      "volume": 0.1979,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_confirmation_003",
+      "label": "確認の別テイク",
+      "tags": [
+        "納得",
+        "confirmation"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/confirmation_003.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "d9b3719731a409c8109c5a049aceffbff9ff6c0ffe074a02fe52664393139b79",
+      "duration": 0.32364583333333335,
+      "peak_dbfs": -1.031,
+      "marker": 0.000562,
+      "volume": 0.2002,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_question_001",
+      "label": "疑問の合図",
+      "tags": [
+        "疑問",
+        "question"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/question_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "3c43a9626843f30727f35d290d88bcf4da61a36cdbbc20c13b18966c597f62b6",
+      "duration": 0.5006875,
+      "peak_dbfs": -0.896,
+      "marker": 0.167271,
+      "volume": 0.1972,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_question_003",
+      "label": "疑問の別テイク",
+      "tags": [
+        "疑問",
+        "question"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/question_003.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "f56ca66770c2d22a522073ffe67b26354ae5b60a260019eb73de9ba5d373737c",
+      "duration": 0.3410625,
+      "peak_dbfs": -0.939,
+      "marker": 0.047229,
+      "volume": 0.1981,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_error_002",
+      "label": "違和感の合図",
+      "tags": [
+        "否定",
+        "error"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/error_002.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "4d48b7d740ccb35d74fed1cfca1a4efd826659ad295bd0b0f907e5d56918dbac",
+      "duration": 0.16545833333333335,
+      "peak_dbfs": 2.922,
+      "marker": 0.001771,
+      "volume": 0.127,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_error_005",
+      "label": "否定の別テイク",
+      "tags": [
+        "否定",
+        "error"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/error_005.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "8e685ba1d408d3029c1a084a238265fa0a2b439d374fbfc8ba6cfef6edfefb7b",
+      "duration": 0.5181041666666667,
+      "peak_dbfs": -0.959,
+      "marker": 0.0485,
+      "volume": 0.1986,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_bong_001",
+      "label": "響く一打",
+      "tags": [
+        "衝撃",
+        "強調",
+        "bong"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/bong_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "f5d5f83b13edc5321352c2ba57972d1400151e3f27f1c18fcda07d261358511a",
+      "duration": 0.13208333333333333,
+      "peak_dbfs": -0.89,
+      "marker": 0.001479,
+      "volume": 0.197,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_drop_001",
+      "label": "落ちるアクセント",
+      "tags": [
+        "着地",
+        "drop"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/drop_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "0aa0b07692c5d37177f078c39d246d12f2685b553ed06887671797737e5cd432",
+      "duration": 0.13208333333333333,
+      "peak_dbfs": 2.123,
+      "marker": 0.000271,
+      "volume": 0.1393,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_drop_003",
+      "label": "落下の別テイク",
+      "tags": [
+        "着地",
+        "drop"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/drop_003.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "c62109152dd126f65fcae62775c5f42e7ccc646edeae770a2b62e33e82f054a0",
+      "duration": 0.19883333333333333,
+      "peak_dbfs": 1.899,
+      "marker": 0.000458,
+      "volume": 0.1429,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_glass_001",
+      "label": "澄んだアクセント",
+      "tags": [
+        "発見",
+        "glass"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/glass_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "39182b395a30b34e18cbcf842922552b23da5b010a52b7777557e02a405f083e",
+      "duration": 0.29170833333333335,
+      "peak_dbfs": -1.064,
+      "marker": 0.000146,
+      "volume": 0.201,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_glass_004",
+      "label": "澄んだ別テイク",
+      "tags": [
+        "発見",
+        "glass"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/glass_004.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "54dd436b826bed6360cc32c059776dc98942bb5abd35b036c8fda075482adef7",
+      "duration": 0.7125625,
+      "peak_dbfs": -0.346,
+      "marker": 4.2e-05,
+      "volume": 0.1851,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_pluck_001",
+      "label": "弾くアクセント",
+      "tags": [
+        "軽い",
+        "強調",
+        "pluck"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/pluck_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "7d676b0b09b56f7e5964ad274feb7e7307a4e552bed8cd98e1e3cecfb9c10c36",
+      "duration": 0.11175,
+      "peak_dbfs": 2.962,
+      "marker": 0.001771,
+      "volume": 0.1264,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_open_001",
+      "label": "開くアクセント",
+      "tags": [
+        "展開",
+        "open"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/open_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "c69aab75d09d98363934c68cda0e9d050973eb5c3ab9987ce8fd5d336a8f7fbd",
+      "duration": 0.14804166666666665,
+      "peak_dbfs": -0.726,
+      "marker": 0.147417,
+      "volume": 0.1933,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_close_001",
+      "label": "閉じるアクセント",
+      "tags": [
+        "締め",
+        "close"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/close_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "423ae3dd2981045649bed82653e43f9770c2baad6da7582d004f9161ef9b0439",
+      "duration": 0.14804166666666665,
+      "peak_dbfs": -0.883,
+      "marker": 0.0005,
+      "volume": 0.1969,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_maximize_001",
+      "label": "広がるアクセント",
+      "tags": [
+        "転換",
+        "maximize"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/maximize_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "c49992256551200a65d77cbdaf9cb691c8a698aaca0a37b56d6be03fef58aa77",
+      "duration": 0.2612291666666667,
+      "peak_dbfs": -0.978,
+      "marker": 0.255417,
+      "volume": 0.199,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_minimize_001",
+      "label": "縮まるアクセント",
+      "tags": [
+        "転換",
+        "minimize"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/minimize_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "2b28be6ccfda4e06df7afa6fd1c25912122cd3cf1161ca91a8a3e9904f4362ae",
+      "duration": 0.27139583333333334,
+      "peak_dbfs": -0.924,
+      "marker": 0.000521,
+      "volume": 0.1978,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    },
+    {
+      "id": "kenney_scratch_001",
+      "label": "引っかかるアクセント",
+      "tags": [
+        "中断",
+        "scratch"
+      ],
+      "url": "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/4596a49eaf5a533948d49a47467f606bcdea70ff/addons/kenney_interface_sounds/scratch_001.wav",
+      "source": "https://kenney.nl/assets/interface-sounds",
+      "sha256": "8db53f023af3410573861dc7b434a052965b6282573b999af17e31d23557d7d2",
+      "duration": 0.16110416666666666,
+      "peak_dbfs": -0.813,
+      "marker": 0.020167,
+      "volume": 0.1953,
+      "marker_method": "最大絶対振幅の候補。採用時に試聴で調整",
+      "auditory_review": "pending"
+    }
+  ]
+}

@@ -77,6 +77,17 @@ def project():
         {"id": "test-word", "effect": "keyword_highlight", "at": {"line": "p1", "offset": 2.35}, "duration": 0.55, "intensity": 0.35,
          "target": {"line": "p1", "keyword": "放水試験"}, "reason": "打ち上げ映像と試験映像の区別を原稿の言葉で示す"},
     ]}
+    for sound, key in zip(p['audio'], ('water-opening', 'launch-field', 'water-payoff')):
+        sound['id'] = key
+    p['sound_design'] = {'version': 1, 'beats': [{
+        'beat': 'story',
+        'ambience': {'decision': 'use', 'reason': 'openingから放水音、ignitionから発射音、flowから放水音でつなぐ',
+                     'refs': ['audio:water-opening', 'audio:launch-field', 'audio:water-payoff']},
+        'sfx': {'decision': 'use', 'reason': 'answerの発見とtestの停止だけを短く強調する',
+                'refs': ['event:sound-reveal', 'event:inspect-test']},
+        'music': {'decision': 'omit', 'reason': '水と発射の現場音を優先する', 'refs': []},
+        'silence': {'decision': 'omit', 'reason': '現場音をカット越しに連続させる', 'refs': []},
+    }]}
     return p
 
 
@@ -130,6 +141,7 @@ def main():
     clean = copy.deepcopy(p)
     clean["title"] = "ロケットを守る水｜演出なし比較"
     clean.pop("editing")
+    clean['sound_design']['beats'][0]['sfx'] = {'decision': 'omit', 'reason': 'SEなしの比較版', 'refs': []}
     clean["subtitles"] = {"font_size": 68, "max_chars_per_line": 11}
     for source in (root / "assets").iterdir():
         link_or_copy(source, baseline / "assets" / source.name)

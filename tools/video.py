@@ -150,7 +150,7 @@ def delivery_check(root: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Codexの台本と演出をローカルで動画化します")
-    parser.add_argument("command", choices=["check", "catalog", "prepare", "build", "status", "wait", "inspect", "review", "compare", "deliver", "publish", "_worker"])
+    parser.add_argument("command", choices=["check", "catalog", "sounds", "sound-plan", "prepare", "build", "status", "wait", "inspect", "review", "compare", "deliver", "publish", "_worker"])
     parser.add_argument("project", type=Path, nargs="?")
     parser.add_argument("--quality", choices=["preview", "final"], default="preview")
     parser.add_argument("--timeout", type=float, default=55)
@@ -159,8 +159,35 @@ def main() -> int:
     parser.add_argument("--voices", action="store_true", help="check時に選択したサービスの声一覧を表示")
     parser.add_argument("--baseline", type=Path, help="compareの演出なし案件")
     parser.add_argument('--schema', action='store_true', help='catalogでJSON Schemaを出力')
+    parser.add_argument('--query', default='', help='soundsの用途検索')
+    parser.add_argument('--fetch', action='store_true', help='soundsの検索結果を取得・検査')
+    parser.add_argument('--audition', action='store_true', help='soundsの試聴HTMLを作成')
+    parser.add_argument('--use', help='soundsのIDを案件のediting.soundsへ取り込む')
+    parser.add_argument('--init', action='store_true', help='sound-planの未決定下書きを正本へ追加')
     args = parser.parse_args()
     root = args.project.resolve() if args.project else None
+    if args.command == 'sounds':
+        from sounds import entries, fetch, measure, audition, import_sound
+        if args.use:
+            if root is None:
+                parser.error('--useにはprojectディレクトリが必要です')
+            if state(root).get('status') in {'starting', 'running'}:
+                raise ValueError('build中は音源を取り込めません')
+            emit(import_sound(root, args.use))
+        elif args.audition:
+            emit(audition(entries(args.query)))
+        else:
+            items = entries(args.query)
+            emit({'sounds': [{**x, **({'measured': measure(fetch(x))} if args.fetch else {})} for x in items]})
+        return 0
+    if args.command == 'sound-plan':
+        if root is None:
+            parser.error('sound-planにはprojectディレクトリが必要です')
+        if args.init and state(root).get('status') in {'starting', 'running'}:
+            raise ValueError('build中は音設計を更新できません')
+        from sound_design import inspect_plan
+        emit(inspect_plan(root, args.init))
+        return 0
     if args.command == "catalog":
         from editing import REGISTRY
         if args.schema:

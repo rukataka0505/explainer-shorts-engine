@@ -29,6 +29,14 @@ def create_review(root: Path, quality: str) -> dict:
     folder.mkdir(parents=True, exist_ok=True)
     fps = timing['video']['fps']
     rows = []
+    from sound_design import warnings as sound_warnings
+    notes = sound_warnings(project)
+    if notes:
+        rows.append('<section><h2>音設計の確認</h2><ul>' + ''.join('<li>' + html.escape(n) + '</li>' for n in notes) + '</ul></section>')
+    for row in project.get('sound_design', {}).get('beats', []):
+        items = [f'{role}: {v.get("decision", "pending")} — {v.get("reason", "")} ({", ".join(v.get("refs", []))})'
+                 for role, v in row.items() if role != 'beat' and isinstance(v, dict)]
+        rows.append('<section><h2>音設計 · ' + html.escape(row['beat']) + '</h2><ul>' + ''.join('<li>' + html.escape(n) + '</li>' for n in items) + '</ul></section>')
     reasons = {s.get('id', f'shot-{i + 1}'): s.get('reason', '') for i, s in enumerate(project['shots'])}
     for i, shot in enumerate(timing['shots']):
         frames = [shot['from'], (shot['from'] + shot['to'] - 1) // 2, shot['to'] - 1]

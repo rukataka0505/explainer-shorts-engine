@@ -60,6 +60,8 @@ def load_project(root: Path) -> dict:
         raise ValueError("shotsが必要です")
     project["voices"] = voices
     decisions(project)  # Reject unsupported editorial instructions before TTS or rendering.
+    from sound_design import warnings as sound_warnings
+    sound_warnings(project)  # Validate authored metadata before any TTS cost.
     final_output_path(root, project)
     return project
 
@@ -152,6 +154,8 @@ def prepare(root: Path, project: dict, client=None) -> dict:
         beats.append({"id": beat["id"], "from": frame(begin, fps), "to": frame(cursor, fps)})
     shots, audio = compile_edit(root, project, anchors, cursor, fps)
     effects, cues, warnings = compile_effects(root, project, records, shots, cursor, fps)
+    from sound_design import warnings as sound_warnings
+    warnings.extend(sound_warnings(project))
     prepare_ramps(root, shots, effects, fps)
     prepare_cues(root, cues)
     audio.extend(cues)

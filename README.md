@@ -72,6 +72,8 @@ NASAの4K元映像3本を約720MBダウンロードし、別の同一打ち上�
 
 ## 普段の制作
 
+音も台本と一緒に設計する。[音設計・24音のSE棚](docs/SOUND.md)を参照。`tools/video.py sounds --audition` で検索・試聴、`sounds projects/<案件> --use <音ID>` で取り込み、`sound-plan projects/<案件> --init` で採否の下書きを作れる。試聴棚の音は機械検査済みで、場面への採用前には試聴する。
+
 Codexへ「○○の解説Shortsを作って」と依頼する。調査・台本・主要映像方針・声・納品方法を一度確認した後に制作する。「確認不要」で省略できる。
 
 ```powershell
