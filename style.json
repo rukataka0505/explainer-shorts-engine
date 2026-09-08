@@ -54,6 +54,8 @@
     }
   },
   "aivisspeech": {
-    "settings": {}
+    "settings": {
+      "speedScale": 1.2
+    }
   }
 }

@@ -33,6 +33,10 @@ class FakeEngine:
 
 
 class AivisTests(unittest.TestCase):
+    def test_default_aivisspeech_speed_is_1_2(self):
+        style = json.loads((Path(__file__).resolve().parents[1] / 'style.json').read_text(encoding='utf-8'))
+        self.assertEqual(style['aivisspeech']['settings']['speedScale'], 1.2)
+
     def test_cache_isolated_by_provider_and_model_and_repairs_corruption(self):
         with tempfile.TemporaryDirectory() as directory:
             cache = Path(directory)

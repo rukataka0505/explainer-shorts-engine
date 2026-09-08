@@ -175,7 +175,7 @@ npm.cmd test --prefix remotion
 
 ## 音声と全文字幕
 
-既定はAivisSpeech / にせ / ノーマル。ローカルAPIの標準設定で生成し、VOICEVOX用の速度・抑揚は混ぜない。設定はstyle.jsonのaivisspeech.settings→声→発話の順に上書きする。
+既定はAivisSpeech / にせ / ノーマル。Shorts向けにAivisSpeechの`speedScale`を1.2とし、VOICEVOX用の抑揚設定は混ぜない。設定はstyle.jsonのaivisspeech.settings→声→発話の順に上書きする。
 
 ElevenLabs / Koji / eleven_multilingual_v2も選択可能。ElevenLabsの既定設定はstyle.jsonのelevenlabsへ分離。APIキーは環境変数のみから読む。
 公開Voice LibraryのKoji（voice_id: W8wofKLOWnsM57L8hIx2）を自分の声一覧へ追加して使う。別の声はstyle.jsonのvoice、または案件のvoicesで指定する。checkは選択したサービスと声を確認し、--voicesで選択したサービスの声一覧を表示する。録音だけの案件はAPI接続不要。
