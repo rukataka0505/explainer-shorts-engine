@@ -9,6 +9,8 @@ from pathlib import Path
 from common import REPO_ROOT, ffprobe, final_output_path, find_executable, project_file, read_json, run, write_json
 from speech import Voicevox, AivisSpeech, ElevenLabs, synthesize, synthesize_elevenlabs
 from edit import compile_edit, frame, number
+from editing import REGISTRY, decisions, speech_edits, compile_effects, subtitle_config, bounded
+from temporal import tighten_speech, prepare_ramps, prepare_cues
 
 
 def load_project(root: Path) -> dict:
@@ -57,6 +59,7 @@ def load_project(root: Path) -> dict:
     if not isinstance(project.get("shots"), list) or not project["shots"]:
         raise ValueError("shotsが必要です")
     project["voices"] = voices
+    decisions(project)  # Reject unsupported editorial instructions before TTS or rendering.
     final_output_path(root, project)
     return project
 
@@ -80,10 +83,13 @@ def prepare(root: Path, project: dict, client=None) -> dict:
     if video["width"] % 2 or video["height"] % 2 or abs(video["width"] / video["height"] - 9 / 16) > 0.001:
         raise ValueError("Shortsは偶数解像度の9:16です")
     fps = video["fps"]
+    bounded(style['audio'].get('headroom_db', -6), 'audio.headroom_db', -24, 0)
+    subtitles = subtitle_config(style, project)
     cursor = 0.0
     records, beats, anchors = [], [], {}
     reused = generated = 0
     clients = {"voicevox": client} if client is not None else {}
+    tightening = speech_edits(project)
     for beat in project["beats"]:
         begin = cursor
         for line in beat.get("lines", []):
@@ -111,20 +117,44 @@ def prepare(root: Path, project: dict, client=None) -> dict:
                 generated += int(not cached)
                 seconds, voice_name = record["duration"], record["name"]
                 path = Path(record["path"]).relative_to(root).as_posix()
+            trim = None
+            if "caption_path" in line:
+                captions = read_json(project_file(root, asset(root, line["caption_path"])))
+                if not isinstance(captions, list) or not captions or any(not isinstance(c, dict) or not isinstance(c.get("text"), str) for c in captions):
+                    raise ValueError("caption_pathはRemotion Captionの配列です")
+                if "".join(c["text"] for c in captions) != line["text"]:
+                    raise ValueError("caption_pathの本文がナレーション原稿と一致しません")
+                previous = 0.0
+                for c in captions:
+                    caption_start = number(c.get("startMs"), "caption.startMs")
+                    end = number(c.get("endMs"), "caption.endMs")
+                    if caption_start < previous or end < caption_start or end > seconds * 1000 + 1:
+                        raise ValueError("caption_pathの時刻が発話範囲外、または逆転しています")
+                    previous = end
+                    c.update(timestampMs=c.get("timestampMs"), confidence=c.get("confidence"))
+            if line["id"] in tightening:
+                path, seconds, captions, trim = tighten_speech(root, path, seconds, tightening[line["id"]]["params"], captions)
             # Quantize narration once: anchors and playback share exactly the same frames.
             first = frame(cursor, fps)
             last = first + math.ceil(seconds * fps)
             anchors[line["id"]] = {"start": first / fps, "end": last / fps}
             records.append({"id": line["id"], "beat": beat["id"], "text": line["text"],
-                            "from": first, "to": last, "path": path, "duration": seconds, "voice_name": voice_name, "captions": captions})
-            cursor = last / fps + line.get("gap", style["audio"]["gap"])
+                            "from": first, "to": last, "path": path, "duration": seconds, "voice_name": voice_name, "captions": captions,
+                            "trim": trim, "caption_timing": "aligned" if captions else "proportional"})
+            gap = line.get("gap", style["audio"]["gap"])
+            if line["id"] in tightening:
+                gap = min(gap, tightening[line["id"]]["params"]["gap"])
+            cursor = last / fps + gap
         requested = beat.get("duration", cursor - begin)
         if requested < cursor - begin - 1e-6:
             raise ValueError(f"{beat['id']}: durationが音声と間より短いです")
         cursor = frame(begin + requested, fps) / fps
         beats.append({"id": beat["id"], "from": frame(begin, fps), "to": frame(cursor, fps)})
     shots, audio = compile_edit(root, project, anchors, cursor, fps)
-    warnings = []
+    effects, cues, warnings = compile_effects(root, project, records, shots, cursor, fps)
+    prepare_ramps(root, shots, effects, fps)
+    prepare_cues(root, cues)
+    audio.extend(cues)
     for sound in audio:
         if sound.get("volume", 1) == 0:
             continue
@@ -136,7 +166,12 @@ def prepare(root: Path, project: dict, client=None) -> dict:
             warnings.append(f"選択した音素材の区間は無音です: {sound['path']} @ {sound.get('source_start', 0):.3f}s")
     result = {"title": project["title"], "video": video, "durationInFrames": frame(cursor, fps),
               "lines": records, "beats": beats, "shots": shots, "audio": audio,
-              "subtitles": {**style["subtitles"], **project.get("subtitles", {})},
+              "editing": {"version": 1, "events": effects,
+                          "caption_animation": project.get("editing", {}).get("caption_animation", "none"),
+                          "caption_preset": {"frames": max(3, frame(REGISTRY['effects']['caption_pop']['duration'][0], fps)),
+                                             "params": {k: v[0] for k, v in REGISTRY['effects']['caption_pop']['params'].items()}, "intensity": 0.35},
+                          "renderer": project.get("editing", {}).get("renderer", "cpu")},
+              "subtitles": subtitles,
               "mix": style["audio"], "warnings": warnings, "speech": {"generated": generated, "reused": reused}}
     write_json(root / "work" / "timing.json", result)
     return result
@@ -172,15 +207,22 @@ def validate_output(root: Path, project: dict, timing: dict, output: Path, quali
         raise ValueError("音声本文が台本と一致しません")
     run([find_executable("ffmpeg"), "-v", "error", "-xerror", "-i", output, "-f", "null", "-"], capture=True)
     levels = measure_loudness(output)
+    if math.isnan(float(levels["input_tp"])) or float(levels["input_tp"]) > -0.5:
+        raise ValueError("完成ミックスのtrue peakが-0.5 dBFSを超過、または測定不能です")
     result = {"passed": True, "quality": quality, "file": output.relative_to(root).as_posix(),
               "duration": float(info["format"]["duration"]), "full_decode": "passed",
               "sha256": hashlib.sha256(output.read_bytes()).hexdigest(),
+              "timing_sha256": timing_digest(timing),
               "width": video["width"], "height": video["height"], "fps": fps,
               "sample_rate": int(audio["sample_rate"]), "loudness": {
                   key: float(levels[field]) if math.isfinite(float(levels[field])) else None
                   for key, field in [("integrated_lufs", "input_i"), ("true_peak_dbfs", "input_tp"), ("range_lu", "input_lra")]}}
     write_json(root / "output" / f"{quality}-validation.json", result)
     return result
+
+
+def timing_digest(timing: dict) -> str:
+    return hashlib.sha256(json.dumps(timing, sort_keys=True, ensure_ascii=False).encode('utf-8')).hexdigest()
 
 
 def validate_thumbnail(root: Path) -> None:
@@ -205,16 +247,22 @@ def measure_loudness(source: Path) -> dict:
     return json.loads(match.group())
 
 
-def normalize_loudness(source: Path, output: Path, duration: float) -> None:
+def normalize_loudness(source: Path, output: Path, duration: float, audio_source: Path | None = None) -> dict:
     """FFmpeg's measured two-pass EBU R128 normalization; picture packets are copied."""
     samples = round(number(duration, "duration", 0.001) * 48000)
-    stats = measure_loudness(source)
+    stats = measure_loudness(audio_source or source)
+    peak = float(stats['input_tp'])
+    if math.isnan(peak) or peak > -.5:
+        raise ValueError('正規化前の音声ミックスに余裕がありません。音素材のvolumeまたはstyle.audio.headroom_dbを下げてください')
     measured = ""
     if math.isfinite(float(stats["input_i"])):
         measured = (f":measured_I={stats['input_i']}:measured_TP={stats['input_tp']}"
                     f":measured_LRA={stats['input_lra']}:measured_thresh={stats['input_thresh']}"
                     f":offset={stats['target_offset']}:linear=true")
-    run([find_executable("ffmpeg"), "-v", "error", "-y", "-i", source,
-         "-map", "0:v:0", "-map", "0:a:0", "-c:v", "copy",
+    audio_input = ['-i', audio_source] if audio_source else []
+    run([find_executable("ffmpeg"), "-v", "error", "-y", "-i", source, *audio_input,
+         "-map", "0:v:0", "-map", "1:a:0" if audio_source else "0:a:0", "-c:v", "copy",
          "-af", f"loudnorm=I=-16:TP=-1.5:LRA=11{measured},aresample=48000,apad,atrim=end_sample={samples},asetpts=N/SR/TB",
          "-ar", "48000", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", output], capture=True)
+    return {'integrated_lufs': float(stats['input_i']) if math.isfinite(float(stats['input_i'])) else None,
+            'true_peak_dbfs': peak if math.isfinite(peak) else None}

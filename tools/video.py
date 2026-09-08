@@ -109,17 +109,20 @@ def run_worker(root: Path, quality: str) -> int:
         node = find_executable("node")
         if not node:
             raise RuntimeError("Node.jsが見つかりません")
+        # Remotion copies separateAudioTo with Node cpSync; replacement can fail
+        # on Windows. Remove this derived mix first so a retry has a fresh target.
+        rendered.with_suffix('.wav').unlink(missing_ok=True)
         subprocess.run([str(node), str(REPO_ROOT / "remotion" / "render.mjs"), str(root), str(rendered), quality], check=True, cwd=REPO_ROOT / "remotion")
         record.update(stage="loudness")
         write_json(work / "job.json", record)
-        normalize_loudness(rendered, temporary, timing["durationInFrames"] / timing["video"]["fps"])
+        raw_mix = normalize_loudness(rendered, temporary, timing["durationInFrames"] / timing["video"]["fps"], rendered.with_suffix('.wav'))
         if hashlib.sha256((root / "project.json").read_bytes()).hexdigest() != project_hash:
             raise ValueError("制作中にproject.jsonが変更されました。buildを再実行してください")
         record.update(stage="verify")
         write_json(work / "job.json", record)
         result = validate_output(root, project, timing, temporary, quality)
         temporary.replace(output)
-        result.update(file=output.relative_to(root).as_posix(), project_sha256=project_hash)
+        result.update(file=output.relative_to(root).as_posix(), project_sha256=project_hash, raw_mix_loudness=raw_mix)
         write_json(root / "output" / f"{quality}-validation.json", result)
         record.update(status="succeeded", stage="complete", output=str(output), duration=result["duration"], elapsed_seconds=round(time.monotonic() - started, 1))
         return 0
@@ -147,15 +150,25 @@ def delivery_check(root: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Codexの台本と演出をローカルで動画化します")
-    parser.add_argument("command", choices=["check", "prepare", "build", "status", "wait", "inspect", "review", "deliver", "publish", "_worker"])
+    parser.add_argument("command", choices=["check", "catalog", "prepare", "build", "status", "wait", "inspect", "review", "compare", "deliver", "publish", "_worker"])
     parser.add_argument("project", type=Path, nargs="?")
     parser.add_argument("--quality", choices=["preview", "final"], default="preview")
     parser.add_argument("--timeout", type=float, default=55)
     parser.add_argument("--at", type=float, default=0)
     parser.add_argument("--duration", type=float, default=0)
     parser.add_argument("--voices", action="store_true", help="check時に選択したサービスの声一覧を表示")
+    parser.add_argument("--baseline", type=Path, help="compareの演出なし案件")
+    parser.add_argument('--schema', action='store_true', help='catalogでJSON Schemaを出力')
     args = parser.parse_args()
     root = args.project.resolve() if args.project else None
+    if args.command == "catalog":
+        from editing import REGISTRY
+        if args.schema:
+            from editing_schema import schema
+            emit(schema())
+        else:
+            emit(REGISTRY)
+        return 0
     if args.command == "check":
         from speech import Voicevox, AivisSpeech, ElevenLabs
         project = load_project(root) if root else None
@@ -193,7 +206,14 @@ def main() -> int:
         if state(root).get("status") in {"starting", "running"}:
             raise ValueError("build実行中はprepareできません")
         timing = prepare(root, load_project(root))
-        emit({"duration": timing["durationInFrames"] / timing["video"]["fps"], "shots": len(timing["shots"]), "warnings": timing["warnings"], **timing["speech"]})
+        emit({"duration": timing["durationInFrames"] / timing["video"]["fps"], "shots": len(timing["shots"]), "effects": len(timing.get("editing", {}).get("events", [])), "warnings": timing["warnings"], **timing["speech"]})
+    elif args.command == "compare":
+        if not args.baseline:
+            raise ValueError("compareには--baselineが必要です")
+        if any(state(p).get("status") in {"starting", "running"} for p in (root, args.baseline.resolve())):
+            raise ValueError("build中は比較を作成できません")
+        from review import create_comparison
+        emit(create_comparison(root, args.baseline.resolve(), args.quality))
     elif args.command == "review":
         if state(root).get("status") in {"starting", "running"}:
             raise ValueError("build実行中はreviewできません")

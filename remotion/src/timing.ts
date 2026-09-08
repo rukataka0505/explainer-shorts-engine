@@ -27,12 +27,42 @@ export function soundVolume(sound: Sound, local: number, fps: number, lines: {fr
   return Math.max(0, (sound.volume ?? 1) * fadeIn * fadeOut * duck);
 }
 
-const captionTokens = (text: string): string[] =>
-  text.match(/[A-Za-z0-9][A-Za-z0-9._+:/-]*|[ァ-ヺー]+|[\s\S]/gu) ?? [];
+const captionSegmenter = new Intl.Segmenter('ja', {granularity: 'word'});
+const captionTokens = (text: string, protectedWords: string[] = []): string[] => {
+  const words = [...protectedWords].filter(Boolean).sort((a, b) => b.length - a.length);
+  const japanese = new Map(Array.from(captionSegmenter.segment(text), s => [s.index, s.segment]));
+  const tokens: string[] = [];
+  let offset = 0;
+  while (offset < text.length) {
+    const protectedWord = words.find(word => text.startsWith(word, offset));
+    const token = protectedWord ?? text.slice(offset).match(/^(?:[A-Za-z0-9][A-Za-z0-9._+:/-]*|[ァ-ヺー]+)/u)?.[0]
+      ?? japanese.get(offset) ?? String.fromCodePoint(text.codePointAt(offset)!);
+    tokens.push(token); offset += token.length;
+  }
+  return tokens;
+};
 
-export const captionParts = (text: string, maxChars = 42): string[] => {
+// Prefer a clause after a comma when that clause fits one row. Otherwise wrap
+// at Japanese word boundaries so a small word such as よう is never torn apart.
+const startsRow = (tokens: string[], index: number, used: number, limit: number) => {
+  const token = tokens[index];
+  if (token === '\n') return true;
+  if (!used) return false;
+  if (tokens[index - 1] === '、') {
+    let clause = 0;
+    for (const next of tokens.slice(index)) {
+      if (next === '\n') break;
+      clause += next.length;
+      if (/^[、。！？!?]/u.test(next)) break;
+    }
+    if (clause <= limit && used + clause > limit) return true;
+  }
+  return used + token.length > limit && !/^[、。！？!?）」』]/u.test(token);
+};
+
+export const captionParts = (text: string, maxChars = 42, protectedWords: string[] = []): string[] => {
   const limit = Math.max(1, Math.floor(maxChars));
-  const tokens = captionTokens(text);
+  const tokens = captionTokens(text, protectedWords);
   const parts: string[] = [];
   let current = '';
   for (const token of tokens) {
@@ -43,28 +73,67 @@ export const captionParts = (text: string, maxChars = 42): string[] => {
   return parts;
 };
 
-export const captionLines = (text: string, maxCharsPerLine = 21): string => {
+export const captionLines = (text: string, maxCharsPerLine = 21, protectedWords: string[] = []): string => {
   const limit = Math.max(1, Math.floor(maxCharsPerLine));
-  const tokens = captionTokens(text.replace(/\r\n/g, '\n'));
+  // A page boundary may retain an authored newline for exact transcript offsets.
+  // It is layout, not an additional empty subtitle row.
+  const tokens = captionTokens(text.replace(/\r\n/g, '\n').replace(/^\n+|\n+$/g, ''), protectedWords);
   const lines: string[] = [''];
-  for (const token of tokens) {
+  for (const [index, token] of tokens.entries()) {
     if (token === '\n') {lines.push(''); continue;}
     const current = lines[lines.length - 1];
-    if (current.length + token.length > limit && current && !/^[、。！？!?）」』]/u.test(token)) lines.push(token);
+    if (startsRow(tokens, index, current.length, limit)) lines.push(token);
     else lines[lines.length - 1] += token;
   }
   return lines.join('\n');
 };
 
+// Page boundaries follow the actual wrapped rows, including protected words.
+export function captionRowPages(text: string, lineChars: number, maxLines: number, protectedWords: string[] = []): string[] {
+  const pages: string[] = [];
+  let current = '', lineLength = 0, rows = 1;
+  const tokens = captionTokens(text, protectedWords);
+  for (const [index, token] of tokens.entries()) {
+    const breakRow = startsRow(tokens, index, lineLength, lineChars);
+    if (breakRow) {
+      if (rows >= maxLines) {pages.push(current); current = ''; rows = 1;} else rows++;
+      lineLength = 0;
+    }
+    current += token;
+    if (token !== '\n') lineLength += token.length;
+  }
+  if (current) pages.push(current);
+  return pages;
+}
 
-export function captionAt(line: {text: string; duration: number; captions?: {text: string; startMs: number}[] | null}, elapsedMs: number, pageChars: number): string {
-  const parts = captionParts(line.text, pageChars);
-  let offset = 0;
-  return parts.find((text, i) => {
+// Avoid a final caption containing only a trailing だ。 or いる。.
+// A small width allowance keeps the phrase together; rendering still measures
+// the real glyphs and reduces the font size to stay inside the safe area.
+export function captionLineChars(text: string, preferred: number, maxLines: number, protectedWords: string[] = []): number {
+  const pages = captionRowPages(text, preferred, maxLines, protectedWords);
+  if (pages.length < 2 || pages[pages.length - 1].trim().length >= Math.max(4, preferred / 2)) return preferred;
+  for (let chars = preferred + 1; chars <= Math.floor(preferred * 1.25); chars++) {
+    const candidate = captionRowPages(text, chars, maxLines, protectedWords);
+    if (candidate.length < pages.length || candidate[candidate.length - 1].trim().length >= Math.max(4, preferred / 2)) return chars;
+  }
+  return preferred;
+}
+
+
+export function captionPageAt(line: {text: string; duration: number; captions?: {text: string; startMs: number}[] | null}, elapsedMs: number, pageChars: number, protectedWords: string[] = [], lineChars?: number) {
+  const parts = lineChars ? captionRowPages(line.text, lineChars, Math.max(1, Math.floor(pageChars / lineChars)), protectedWords) : captionParts(line.text, pageChars, protectedWords);
+  let offset = 0, startMs = 0;
+  for (let i = 0; i < parts.length; i++) {
+    const text = parts[i], firstChar = offset;
     offset += text.length;
     let count = 0;
     const next = line.captions?.find(c => {const start = count; count += c.text.length; return start >= offset;});
     const end = i === parts.length - 1 ? Infinity : next?.startMs ?? offset / line.text.length * line.duration * 1000;
-    return elapsedMs < end;
-  }) ?? '';
+    if (elapsedMs < end) return {text, startMs, endMs: end, offset: firstChar};
+    startMs = end;
+  }
+  return {text: '', startMs, endMs: Infinity, offset};
+}
+export function captionAt(line: {text: string; duration: number; captions?: {text: string; startMs: number}[] | null}, elapsedMs: number, pageChars: number): string {
+  return captionPageAt(line, elapsedMs, pageChars).text;
 }

@@ -35,13 +35,20 @@ const server = http.createServer((req, res) => {
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 try {
   props.assetBase = `http://127.0.0.1:${server.address().port}`;
+  const chromiumOptions = props.editing?.renderer === 'webgl' ? {gl: 'angle'} : undefined;
   const serveUrl = await bundle({entryPoint: path.join(here, 'src/index.ts'), publicDir: null,
     outDir: path.join(project, 'work/bundle'),
     webpackOverride: config => ({...config, resolve: {...config.resolve,
       modules: [path.join(here, 'node_modules'), 'node_modules']}})});
-  const composition = await selectComposition({serveUrl, id: 'Film', inputProps: props, logLevel: 'error'});
+  const composition = await selectComposition({serveUrl, id: 'Film', inputProps: props, logLevel: 'error', chromiumOptions});
   await renderMedia({composition, serveUrl, inputProps: props, outputLocation: path.resolve(outputArg),
-    codec: 'h264', audioCodec: 'aac', pixelFormat: 'yuv420p', enforceAudioTrack: true,
+    // Keep the intermediate mix lossless: AAC priming in an intermediate stream
+    // can shift every cue. Encode AAC once, after measured normalization.
+    codec: 'h264', audioCodec: 'pcm-16', pixelFormat: 'yuv420p', enforceAudioTrack: true,
+    separateAudioTo: path.join(path.dirname(path.resolve(outputArg)), path.parse(outputArg).name + '.wav'),
+    // With PCM, the parallel encoder's temporary MKV rounds PTS to milliseconds.
+    // Encode the frames directly at the composition fps instead.
+    disallowParallelEncoding: true,
     scale: quality === 'preview' ? 0.5 : 1, crf: quality === 'preview' ? 25 : 18,
-    concurrency: 2, logLevel: 'error', timeoutInMilliseconds: 120000});
+    concurrency: props.editing?.renderer === 'webgl' ? 1 : 2, chromiumOptions, logLevel: 'error', timeoutInMilliseconds: 120000});
 } finally {server.closeAllConnections(); server.close();}

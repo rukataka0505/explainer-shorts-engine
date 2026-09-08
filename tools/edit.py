@@ -98,6 +98,15 @@ def compile_edit(root, project, lines, duration, fps):
             if needed > float(info["format"]["duration"]) + 1 / fps:
                 raise ValueError(f"動画素材の尺が足りません（ループ・静止延長しません）: {item['path']}")
         item["camera"] = camera_points(item.get("camera"))
+        if "subject" in item:
+            subject = item["subject"]
+            if not isinstance(subject, dict) or set(subject) != {"x", "y", "width", "height"}:
+                raise ValueError("shot.subjectは元画像上のx/y/width/heightです")
+            for key in subject:
+                if number(subject[key], "subject." + key) > 1:
+                    raise ValueError("subjectは0..1の範囲です")
+            if subject["width"] <= 0 or subject["height"] <= 0 or subject["x"] + subject["width"] > 1 or subject["y"] + subject["height"] > 1:
+                raise ValueError("subjectの範囲が不正です")
         if item.get("fit", "cover") not in {"cover", "contain"}:
             raise ValueError("fitはcoverまたはcontainです")
         shots.append(item)

@@ -4,6 +4,33 @@
 
 全文字幕はナレーションと同じ本文から表示する。固定のタイトル画面、図解、立ち絵は入れない。素材のいい瞬間を選び、画の切り替え・縦構図・現場音・声の間を編集する。[編集手順](docs/EDITING.md)と[根拠・設計判断](docs/SOURCES.md)を参照。
 
+`project.json.editing` v1では、8つの編集パターンと16種の演出を意味・対象・時刻で指定できる。字幕の登場と強調、寄って戻るズーム、減衰シェイク、実際の映像の停止、B-roll、速度カーブ、SEを同じ時間軸へ展開する。原稿の変更に追従する発話参照、固定seed、実レンダーでの配置検査を備える。[演出の契約・制限](docs/EDITING_CONTRACT.md)を参照。
+
+## 新しい編集をA/Bで確認する
+
+```powershell
+.\.venv\Scripts\python.exe examples/create_editing_demo.py
+# 同じNASA原本がある場合は、上のコマンドに --source-project projects/aivisspeech-nise-sample
+.\.venv\Scripts\python.exe tools/video.py prepare projects/editing-grammar-v1
+.\.venv\Scripts\python.exe examples/create_editing_demo.py --align-baseline
+.\.venv\Scripts\python.exe tools/video.py build projects/editing-grammar-v1 --quality preview
+.\.venv\Scripts\python.exe tools/video.py wait projects/editing-grammar-v1
+.\.venv\Scripts\python.exe tools/video.py review projects/editing-grammar-v1 --quality preview
+.\.venv\Scripts\python.exe tools/video.py build projects/editing-grammar-v1-baseline --quality preview
+.\.venv\Scripts\python.exe tools/video.py wait projects/editing-grammar-v1-baseline
+.\.venv\Scripts\python.exe tools/video.py compare projects/editing-grammar-v1 --baseline projects/editing-grammar-v1-baseline
+```
+
+約30秒の実写・にせ音声。同じ9行の台本・同一の原音声・NASA素材で、小さい字幕・演出なしの版と比較する。A/Bは字幕のサイズ・改行も含む比較。発話前後の無音処理で尺が変わるため、原稿ボタンで同じ発話へ移動できる。比較HTMLはブラウザーで開き、A/Bの音を別々に再生する。確認・修正後は両案件を `--quality final` でbuildし、compareにも同じqualityを指定する。検証サンプルは投稿しない。
+
+```powershell
+# テンプレート一覧とJSON Schema
+.\.venv\Scripts\python.exe tools/video.py catalog
+.\.venv\Scripts\python.exe tools/video.py catalog --schema
+```
+
+比較HTMLをHTTPで開く場合は `.\.venv\Scripts\python.exe tools/review_server.py` を起動し、`http://127.0.0.1:8767/editing-grammar-v1/work/compare/index.html` を開く。ローカル専用で、動画の区間移動に必要なbyte-range配信に対応する。
+
 ## セットアップ
 
 Python 3.13、Node.js、Git、FFmpeg/ffprobe。標準音声はAivisSpeechの「にせ」（ノーマル）。AivisSpeechを公式サイトから導入し、AivisHubの「にせ」を追加する。APIキー不要。
@@ -101,6 +128,9 @@ buildは背景実行。waitは最長55秒待ち、終わっていなければも
 | reason | 任意の短い編集意図。reviewに表示される |
 | audio | 現場音、SE、音楽。映像ファイルの音声も指定可能。音量、フェード、duck、音楽のloopを設定 |
 | research / youtube | 調査根拠・留保、YouTube説明欄とクレジット。これらのメタデータは作品内に描画しない |
+| editing | version=1の演出指定。patternまたはeffect、reason、target、発話・ショット・単語に対する時刻、強度、SE。同じ正本の一部であり、派生する時間表へ追記しない |
+| line.caption_path | 音声と同じ原文・実測文字時刻を持つRemotion Caption JSON。単語への正確な参照に使用。無音端の整理時も時刻を追従させる |
+| shot.subject | 任意の重要範囲 `{x,y,width,height}`。元画像の0..1座標。ズーム後の見切れを検出する。自動顔検出ではない |
 
 時刻をフレームへ一度確定してから描画する。元素材の音は映像側ではミュートされるため、使用時はaudioへ明示する。素材が短い場合はエラーにし、映像をループや静止で水増ししない。音源の長い末尾無音などは必要に応じてFFmpegで事前に整える。
 
@@ -109,6 +139,8 @@ buildは背景実行。waitは最長55秒待ち、終わっていなければも
 ## 出力と検査
 
 `output/preview.mp4`は540×960、`output/<タイトル>.mp4`は1080×1920。完成時に全文デコード、実尺、解像度、fps、48kHz、音量の実測を`output/final-validation.json`に保存する。約−16 LUFS、true peak −1.5 dBを運用目標とし、2パス補正後のAACを再測定する。
+
+ミックス前に全トラックへ既定−6dBの余裕を設ける（style.audio.headroom_db）。補正前・補正後の両方でピークを検査し、補正前に余裕がなければ音量調整を求めて停止する。正規化で既に発生した歪みを隠さない。
 
 映像の美しさ・台本の面白さは機械的合格とは別に、完成動画で確認する。主役の見切れ、場面との不一致、読み違いはproject.jsonや素材へ戻って直す。設定済み素材を高品質に実行するエンジンであり、題材を問わずヒットを保証する採点器は持たない。
 
@@ -130,9 +162,16 @@ npm.cmd run typecheck --prefix remotion
 npm.cmd test --prefix remotion
 # トリム・速度・カット位置と独立音声を、実レンダーで検証（任意の統合検査）
 .\.venv\Scripts\python.exe tests/render_smoke.py
+# 16演出の実レンダー回帰（360×640。最後の2演出にはWebGL環境が必要）
+.\.venv\Scripts\python.exe examples/create_editing_fixture.py
+.\.venv\Scripts\python.exe tools/video.py build projects/editing-fixture-v1 --quality final
+.\.venv\Scripts\python.exe tools/video.py wait projects/editing-fixture-v1
+.\.venv\Scripts\python.exe tests/verify_editing_render.py
 ```
 
 元エンジンから音声キャッシュ、背景ジョブ、検査と非公開納品を継承。新エンジンは元フォルダに依存せず動く。`projects/`、素材、生成動画、認証情報はGit対象外。`examples/`に再現用の編集指定と素材取得コードを残す。
+
+回帰検査はフレーム位置・画素・実音声を調べ、38時点の縮小参照と比較する。参照を更新する時だけ `--update-reference` を指定し、生成される `output/editing-contact.jpg` を確認する。合成パターンの検査と、実写作品の良し悪しは別に評価する。[今回の実測・確認範囲](docs/VERIFICATION.md)。
 
 ## 音声と全文字幕
 
@@ -144,6 +183,7 @@ ElevenLabs / Koji / eleven_multilingual_v2も選択可能。ElevenLabsの既定�
 字幕はbeats[].lines[].textから生成し、本文を要約・書き換えない。ElevenLabsのwith-timestamps APIが返す原文の文字時刻で長文のページを切り替える。原文と文字時刻が一致しない場合はエラー。AivisSpeech・VOICEVOX・録音素材は従来同様に発話全体の時間と文字数による分割のため、長い発話は短く分ける。生成音声の読み違いは試聴して直す。
 
 元エンジンの日本語改行・保護単語とSubtitle描画を流用。既定はずんだもんと同じ緑 #66E07A・白内縁10px・黒外縁4px、帯なし。声とは独立した色設定。1080×1920基準のサイズ・位置をstyle.jsonのsubtitlesへ置き、案件のsubtitlesで上書きできる。字幕原稿は別に作らない。
+既定サイズは88px、1行8文字・2行を出発点とし、強調語を途中で分割しない。保護語が長ければ幅に合わせて縮小する。safe_areaは各SNSの不変の規格ではなく、このエンジンの調整可能な余白。レンダー時の実際の文字配置で、縁取り・拡大後も画面内かを検査する。
 音声は本文・声・モデル・設定を含むキャッシュで再利用し、字幕の配置変更だけでは再課金されない。
 
 API仕様: https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps

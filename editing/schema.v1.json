@@ -1,0 +1,4055 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shorts project.json editing v1",
+  "$defs": {
+    "time": {
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "object",
+          "properties": {
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "word": {
+              "type": "string",
+              "minLength": 1
+            },
+            "edge": {
+              "enum": [
+                "start",
+                "end"
+              ]
+            },
+            "offset": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "line"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "edge": {
+              "enum": [
+                "start",
+                "end"
+              ]
+            },
+            "offset": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "audio": {
+      "type": "object",
+      "properties": {
+        "sfx": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sync": {
+          "enum": [
+            "start",
+            "peak_velocity",
+            "impact",
+            "landing",
+            "end"
+          ]
+        },
+        "offset_ms": {
+          "type": "number",
+          "default": 0,
+          "minimum": -1000,
+          "maximum": 1000
+        },
+        "volume": {
+          "type": "number",
+          "default": 0.3,
+          "minimum": 0,
+          "maximum": 2
+        }
+      },
+      "required": [
+        "sfx"
+      ],
+      "additionalProperties": false
+    },
+    "sound": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_start": {
+          "type": "number",
+          "minimum": 0
+        },
+        "duration": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "marker": {
+          "type": "number",
+          "minimum": 0
+        },
+        "volume": {
+          "type": "number",
+          "default": 0.3,
+          "minimum": 0,
+          "maximum": 2
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "layer": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "depth": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0.1,
+          "maximum": 2
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "media": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_start": {
+          "type": "number",
+          "minimum": 0
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fit": {
+          "enum": [
+            "cover",
+            "contain"
+          ]
+        },
+        "camera": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "at": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "zoom": {
+                "type": "number",
+                "minimum": 1
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "effect_jump_cut_tighten": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "jump_cut_tighten"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "gap": {
+              "type": "number",
+              "default": 0.12,
+              "minimum": 0,
+              "maximum": 1
+            },
+            "threshold_db": {
+              "type": "number",
+              "default": -50,
+              "minimum": -80,
+              "maximum": -25
+            },
+            "keep": {
+              "type": "number",
+              "default": 0.06,
+              "minimum": 0.02,
+              "maximum": 0.3
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "line"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "effect_caption_pop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "caption_pop"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "start_scale": {
+              "type": "number",
+              "default": 0.86,
+              "minimum": 0.7,
+              "maximum": 1
+            },
+            "peak_scale": {
+              "type": "number",
+              "default": 1.06,
+              "minimum": 1,
+              "maximum": 1.15
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "line"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.14,
+          "minimum": 0.08,
+          "maximum": 0.4
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "effect_keyword_highlight": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "keyword_highlight"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "peak_scale": {
+              "type": "number",
+              "default": 1.08,
+              "minimum": 1,
+              "maximum": 1.2
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "keyword",
+            "line"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.3,
+          "minimum": 0.1,
+          "maximum": 3
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "effect_punch_zoom": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "punch_zoom"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "peak_scale": {
+              "type": "number",
+              "default": 1.12,
+              "minimum": 1,
+              "maximum": 1.3
+            },
+            "settle_scale": {
+              "type": "number",
+              "default": 1.05,
+              "minimum": 1,
+              "maximum": 1.2
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.2,
+          "minimum": 0.1,
+          "maximum": 0.5
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "effect_impact_shake": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "impact_shake"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "pixels": {
+              "type": "number",
+              "default": 14,
+              "minimum": 0,
+              "maximum": 28
+            },
+            "rotation": {
+              "type": "number",
+              "default": 0.7,
+              "minimum": 0,
+              "maximum": 1.5
+            },
+            "frequency": {
+              "type": "number",
+              "default": 10,
+              "minimum": 6,
+              "maximum": 14
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.18,
+          "minimum": 0.1,
+          "maximum": 0.4
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "effect_flash_cut": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "flash_cut"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "opacity": {
+              "type": "number",
+              "default": 0.8,
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.067,
+          "minimum": 0.033,
+          "maximum": 0.134
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "effect_freeze_frame": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "freeze_frame"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.55,
+          "minimum": 0.1,
+          "maximum": 1.2
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "effect_broll_cutaway": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "broll_cutaway"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "push": {
+              "type": "number",
+              "default": 1,
+              "minimum": 1,
+              "maximum": 1.15
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 1.8,
+          "minimum": 0.2,
+          "maximum": 10
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target",
+        "media"
+      ],
+      "additionalProperties": false
+    },
+    "effect_speed_ramp": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "speed_ramp"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "peak": {
+              "type": "number",
+              "default": 3,
+              "minimum": 1,
+              "maximum": 6
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.35,
+          "minimum": 0.2,
+          "maximum": 1.2
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "effect_whip_transition": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "whip_transition"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "blur": {
+              "type": "number",
+              "default": 40,
+              "minimum": 0,
+              "maximum": 80
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "direction": {
+          "enum": [
+            "left",
+            "right"
+          ],
+          "default": "left"
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.2,
+          "minimum": 0.12,
+          "maximum": 0.4
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "effect_focus_reveal": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "focus_reveal"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "blur": {
+              "type": "number",
+              "default": 16,
+              "minimum": 0,
+              "maximum": 24
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.3,
+          "minimum": 0.15,
+          "maximum": 0.8
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "effect_callout": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "callout"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "offset": {
+              "type": "number",
+              "default": 40,
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "point",
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 1.1,
+          "minimum": 0.25,
+          "maximum": 5
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "effect_parallax_push": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "parallax_push"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "depth": {
+              "type": "number",
+              "default": 0.55,
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "layers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/layer"
+          }
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 1.1,
+          "minimum": 0.3,
+          "maximum": 5
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target",
+        "layers"
+      ],
+      "additionalProperties": false
+    },
+    "effect_subject_popout": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "subject_popout"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "scale": {
+              "type": "number",
+              "default": 1.1,
+              "minimum": 1,
+              "maximum": 1.15
+            },
+            "blur": {
+              "type": "number",
+              "default": 12,
+              "minimum": 0,
+              "maximum": 20
+            },
+            "dim": {
+              "type": "number",
+              "default": 0.25,
+              "minimum": 0,
+              "maximum": 0.35
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "layers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/layer"
+          }
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.8,
+          "minimum": 0.3,
+          "maximum": 3
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target",
+        "layers"
+      ],
+      "additionalProperties": false
+    },
+    "effect_rgb_split": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "rgb_split"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "offset": {
+              "type": "number",
+              "default": 6,
+              "minimum": 0,
+              "maximum": 12
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.12,
+          "minimum": 0.067,
+          "maximum": 0.3
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "effect_glitch_burst": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "effect": {
+          "const": "glitch_burst"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "offset": {
+              "type": "number",
+              "default": 12,
+              "minimum": 0,
+              "maximum": 40
+            },
+            "slices": {
+              "type": "integer",
+              "default": 8,
+              "minimum": 4,
+              "maximum": 16
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.1,
+          "minimum": 0.067,
+          "maximum": 0.3
+        }
+      },
+      "required": [
+        "id",
+        "effect",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "pattern_emphasize_claim": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "pattern": {
+          "const": "emphasize_claim"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "punch_zoom": {
+              "type": "object",
+              "properties": {
+                "peak_scale": {
+                  "type": "number",
+                  "default": 1.12,
+                  "minimum": 1,
+                  "maximum": 1.3
+                },
+                "settle_scale": {
+                  "type": "number",
+                  "default": 1.05,
+                  "minimum": 1,
+                  "maximum": 1.2
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "keyword_highlight": {
+              "type": "object",
+              "properties": {
+                "peak_scale": {
+                  "type": "number",
+                  "default": 1.08,
+                  "minimum": 1,
+                  "maximum": 1.2
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "keyword",
+            "line",
+            "shot"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "pattern",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "pattern_reveal_shock": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "pattern": {
+          "const": "reveal_shock"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "punch_zoom": {
+              "type": "object",
+              "properties": {
+                "peak_scale": {
+                  "type": "number",
+                  "default": 1.12,
+                  "minimum": 1,
+                  "maximum": 1.3
+                },
+                "settle_scale": {
+                  "type": "number",
+                  "default": 1.05,
+                  "minimum": 1,
+                  "maximum": 1.2
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "impact_shake": {
+              "type": "object",
+              "properties": {
+                "pixels": {
+                  "type": "number",
+                  "default": 14,
+                  "minimum": 0,
+                  "maximum": 28
+                },
+                "rotation": {
+                  "type": "number",
+                  "default": 0.7,
+                  "minimum": 0,
+                  "maximum": 1.5
+                },
+                "frequency": {
+                  "type": "number",
+                  "default": 10,
+                  "minimum": 6,
+                  "maximum": 14
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "keyword_highlight": {
+              "type": "object",
+              "properties": {
+                "peak_scale": {
+                  "type": "number",
+                  "default": 1.08,
+                  "minimum": 1,
+                  "maximum": 1.2
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "keyword",
+            "line",
+            "shot"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "pattern",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "pattern_comic_interrupt": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "pattern": {
+          "const": "comic_interrupt"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "freeze_frame": {
+              "type": "object",
+              "properties": {},
+              "required": [],
+              "additionalProperties": false
+            },
+            "punch_zoom": {
+              "type": "object",
+              "properties": {
+                "peak_scale": {
+                  "type": "number",
+                  "default": 1.12,
+                  "minimum": 1,
+                  "maximum": 1.3
+                },
+                "settle_scale": {
+                  "type": "number",
+                  "default": 1.05,
+                  "minimum": 1,
+                  "maximum": 1.2
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "keyword_highlight": {
+              "type": "object",
+              "properties": {
+                "peak_scale": {
+                  "type": "number",
+                  "default": 1.08,
+                  "minimum": 1,
+                  "maximum": 1.2
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "keyword",
+            "line",
+            "shot"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "pattern",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "pattern_show_evidence": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "pattern": {
+          "const": "show_evidence"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "broll_cutaway": {
+              "type": "object",
+              "properties": {
+                "push": {
+                  "type": "number",
+                  "default": 1,
+                  "minimum": 1,
+                  "maximum": 1.15
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "caption_pop": {
+              "type": "object",
+              "properties": {
+                "start_scale": {
+                  "type": "number",
+                  "default": 0.86,
+                  "minimum": 0.7,
+                  "maximum": 1
+                },
+                "peak_scale": {
+                  "type": "number",
+                  "default": 1.06,
+                  "minimum": 1,
+                  "maximum": 1.15
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "line",
+            "shot"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "pattern",
+        "reason",
+        "target",
+        "media"
+      ],
+      "additionalProperties": false
+    },
+    "pattern_shift_focus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "pattern": {
+          "const": "shift_focus"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "focus_reveal": {
+              "type": "object",
+              "properties": {
+                "blur": {
+                  "type": "number",
+                  "default": 16,
+                  "minimum": 0,
+                  "maximum": 24
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "callout": {
+              "type": "object",
+              "properties": {
+                "offset": {
+                  "type": "number",
+                  "default": 40,
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "point",
+            "shot"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "pattern",
+        "reason",
+        "target",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "pattern_momentum_transition": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "pattern": {
+          "const": "momentum_transition"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "whip_transition": {
+              "type": "object",
+              "properties": {
+                "blur": {
+                  "type": "number",
+                  "default": 40,
+                  "minimum": 0,
+                  "maximum": 80
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "direction": {
+          "enum": [
+            "left",
+            "right"
+          ],
+          "default": "left"
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "shot"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "pattern",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "pattern_numeric_fact": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "pattern": {
+          "const": "numeric_fact"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "keyword_highlight": {
+              "type": "object",
+              "properties": {
+                "peak_scale": {
+                  "type": "number",
+                  "default": 1.08,
+                  "minimum": 1,
+                  "maximum": 1.2
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "caption_pop": {
+              "type": "object",
+              "properties": {
+                "start_scale": {
+                  "type": "number",
+                  "default": 0.86,
+                  "minimum": 0.7,
+                  "maximum": 1
+                },
+                "peak_scale": {
+                  "type": "number",
+                  "default": 1.06,
+                  "minimum": 1,
+                  "maximum": 1.15
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "keyword",
+            "line"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "pattern",
+        "reason",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "pattern_isolate_subject": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "const": 1,
+          "default": 1
+        },
+        "pattern": {
+          "const": "isolate_subject"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        },
+        "emotion": {
+          "type": "string"
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "intensity": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "seed": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "at": {
+          "$ref": "#/$defs/time"
+        },
+        "audio": {
+          "$ref": "#/$defs/audio"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "subject_popout": {
+              "type": "object",
+              "properties": {
+                "scale": {
+                  "type": "number",
+                  "default": 1.1,
+                  "minimum": 1,
+                  "maximum": 1.15
+                },
+                "blur": {
+                  "type": "number",
+                  "default": 12,
+                  "minimum": 0,
+                  "maximum": 20
+                },
+                "dim": {
+                  "type": "number",
+                  "default": 0.25,
+                  "minimum": 0,
+                  "maximum": 0.35
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "keyword_highlight": {
+              "type": "object",
+              "properties": {
+                "peak_scale": {
+                  "type": "number",
+                  "default": 1.08,
+                  "minimum": 1,
+                  "maximum": 1.2
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "layers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/layer"
+          }
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "shot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1
+            },
+            "keyword": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            },
+            "point": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "keyword",
+            "line",
+            "shot"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "pattern",
+        "reason",
+        "target",
+        "layers"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 1,
+      "default": 1
+    },
+    "seed": {
+      "type": "string"
+    },
+    "renderer": {
+      "enum": [
+        "cpu",
+        "webgl"
+      ],
+      "default": "cpu"
+    },
+    "caption_animation": {
+      "enum": [
+        "none",
+        "caption_pop"
+      ],
+      "default": "none"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/effect_jump_cut_tighten"
+          },
+          {
+            "$ref": "#/$defs/effect_caption_pop"
+          },
+          {
+            "$ref": "#/$defs/effect_keyword_highlight"
+          },
+          {
+            "$ref": "#/$defs/effect_punch_zoom"
+          },
+          {
+            "$ref": "#/$defs/effect_impact_shake"
+          },
+          {
+            "$ref": "#/$defs/effect_flash_cut"
+          },
+          {
+            "$ref": "#/$defs/effect_freeze_frame"
+          },
+          {
+            "$ref": "#/$defs/effect_broll_cutaway"
+          },
+          {
+            "$ref": "#/$defs/effect_speed_ramp"
+          },
+          {
+            "$ref": "#/$defs/effect_whip_transition"
+          },
+          {
+            "$ref": "#/$defs/effect_focus_reveal"
+          },
+          {
+            "$ref": "#/$defs/effect_callout"
+          },
+          {
+            "$ref": "#/$defs/effect_parallax_push"
+          },
+          {
+            "$ref": "#/$defs/effect_subject_popout"
+          },
+          {
+            "$ref": "#/$defs/effect_rgb_split"
+          },
+          {
+            "$ref": "#/$defs/effect_glitch_burst"
+          },
+          {
+            "$ref": "#/$defs/pattern_emphasize_claim"
+          },
+          {
+            "$ref": "#/$defs/pattern_reveal_shock"
+          },
+          {
+            "$ref": "#/$defs/pattern_comic_interrupt"
+          },
+          {
+            "$ref": "#/$defs/pattern_show_evidence"
+          },
+          {
+            "$ref": "#/$defs/pattern_shift_focus"
+          },
+          {
+            "$ref": "#/$defs/pattern_momentum_transition"
+          },
+          {
+            "$ref": "#/$defs/pattern_numeric_fact"
+          },
+          {
+            "$ref": "#/$defs/pattern_isolate_subject"
+          }
+        ]
+      }
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "strong_effect_cooldown": {
+          "type": "number",
+          "default": 2,
+          "minimum": 0,
+          "maximum": 30
+        },
+        "max_per_10s": {
+          "type": "object",
+          "properties": {
+            "jump_cut_tighten": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "caption_pop": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "keyword_highlight": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "punch_zoom": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "impact_shake": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "flash_cut": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "freeze_frame": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "broll_cutaway": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "speed_ramp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "whip_transition": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "focus_reveal": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "callout": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "parallax_push": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "subject_popout": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "rgb_split": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "glitch_burst": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "never_stack": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "enum": [
+                "jump_cut_tighten",
+                "caption_pop",
+                "keyword_highlight",
+                "punch_zoom",
+                "impact_shake",
+                "flash_cut",
+                "freeze_frame",
+                "broll_cutaway",
+                "speed_ramp",
+                "whip_transition",
+                "focus_reveal",
+                "callout",
+                "parallax_push",
+                "subject_popout",
+                "rgb_split",
+                "glitch_burst"
+              ]
+            }
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "sounds": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/sound"
+      }
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

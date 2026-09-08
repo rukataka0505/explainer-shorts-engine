@@ -4,15 +4,17 @@
   "version": "1.0.0",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test timing.test.mjs",
+    "test": "node --test timing.test.mjs editing.test.mjs",
     "studio": "remotion studio --no-open"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.521",
     "@remotion/captions": "4.0.521",
     "@remotion/cli": "4.0.521",
+    "@remotion/effects": "4.0.521",
     "@remotion/media": "4.0.521",
     "@remotion/renderer": "4.0.521",
+    "@remotion/sfx": "4.0.521",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "remotion": "4.0.521"

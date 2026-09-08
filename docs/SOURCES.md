@@ -25,3 +25,22 @@ Remotionはソース公開のライセンス製品で、一般的な無条件の
 ## 品質をどう扱うか
 
 コードのテストは時間・構図の計算と破損を検証する。カットの良さや再生数は証明しない。実写サンプルは実装の動作と編集判断をレビューするためのもの。異なる題材でも素材確認→編集→視聴修正を繰り返す。自称の「人間レベルスコア」を合否に使わない。
+
+## 演出文法 v1 の確認（2026-09-08）
+
+依頼された調査報告の方向性から、意味→パターン→技法という編集指定を既存project.jsonへ追加した。外部DSLやエージェントを増設せず、同じRemotionタイムラインで実行する。後から追加された全文字幕とこの演出層は、上記「継承と変更」に記した初期の映像専用実装からの更新。
+
+| 今回確認した一次資料 | 採用範囲 |
+|---|---|
+| [Remotion interpolate](https://www.remotion.dev/docs/interpolate) / [spring](https://www.remotion.dev/docs/spring) | フレームに依存する時間曲線。v1は明示的なovershoot/settle曲線をinterpolateで実装 |
+| [Remotion Freeze](https://www.remotion.dev/docs/freeze) | 明示した映像の一時停止。映像と音声の時計は分離 |
+| [Remotion media Video](https://www.remotion.dev/docs/media/video) | trimBefore、playbackRate、Effectsの実行。型と実レンダーでフレーム単位を確認 |
+| [Remotion Effects](https://www.remotion.dev/docs/effects) | createEffectとchromaticAberration。独立したshaderエンジンを増やさず公式API上に実装 |
+| [Remotion SFX](https://www.remotion.dev/docs/sfx) | switch/mouse-click等の公式音源。音はローカル取得し、明示した音源バンクから選択 |
+| [Remotion renderMedia](https://www.remotion.dev/docs/renderer/render-media) / [Encoding](https://www.remotion.dev/docs/encoding) | separateAudioToとpcm-16でミックスを無圧縮WAVへ出力。実測で見つけた中間AACの約42.7msの遅延を除き、最終AACのみに圧縮。フレームの中間MKVによるms丸めを避けるためdisallowParallelEncodingを指定 |
+| [FFmpeg silencedetect](https://ffmpeg.org/ffmpeg-filters.html#silencedetect) / [setpts](https://ffmpeg.org/ffmpeg-filters.html#setpts_002c-asetpts) | 発話端の無音検出、単調な時間写像での映像速度変更。内部発話の切断・光学フロー補間は含めない |
+| [NASA: Pad 39B water flow test](https://www.nasa.gov/centers-and-facilities/kennedy/pad-39b-water-flow-test-comes-through-loud-and-clear/) | 実写サンプルの説明と原映像。選んだ放水・点火区間は実際のフレームを見て確認 |
+
+パッケージはすべて4.0.521へ固定し、effects/sfxを追加。video-mattingの[公式資料](https://www.remotion.dev/docs/video-matting)も確認したが、取得できたMarkdownにはAvailableFrom 4.0.523とインストール例4.0.522が混在し、公開npmの `npm view @remotion/video-matting` はE404だった。そのため自動動画切り抜きは導入せず、実際の透過PNGを受け取る静止画レイヤーに限定した。将来の可用性は再確認が必要。
+
+報告中のTikTok研究やOpusClipの利用率は、今回の実装で元データを再取得・解析していない。カットの最適値や効果の成功率を実証済みの閾値として採用せず、時間・強度の初期値と密度の助言として扱う。400本のコーパス、AE/AviUtlのゴールドマスター、第三者による盲検評価は今回の成果に含まれない。
