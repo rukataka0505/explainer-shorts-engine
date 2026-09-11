@@ -31,15 +31,15 @@ test('a J-cut retains source sound before the picture, ducks under narration and
 });
 
 test('caption pages preserve every character, punctuation and protected words', () => {
-  for (const text of ['この大量の水、何のためだと思う？', '音のエネルギーを弱めて、機体への負担を減らす。', 'NASAのロケット。水🚀を使う。']) {
+  for (const text of ['字幕テスト、句読点も保持する。', '固有語ABC123を途中で壊さない。', '日本語とemoji🚀を保持する。']) {
     const pages = captionParts(text, 12);
     assert.equal(pages.join(''), text);
     assert.equal(pages.map(p => captionLines(p, 6).replaceAll('\n', '')).join(''), text);
   }
 });
 test('caption page changes follow the next spoken character, not text-length timing', () => {
-  const line = {text: '水が機体を守る。', duration: 4, captions: Array.from('水が機体を守る。').map((text, i) => ({text, startMs: [0,100,200,300,2500,2600,2800,3000][i]}))};
-  assert.equal(captionAt(line, 2499, 4), '水が機体');
-  assert.equal(captionAt(line, 2500, 4), 'を守る。');
-  assert.equal(captionAt({...line, captions: null}, 1999, 4), '水が機体');
+  const line = {text: '字幕時刻テスト。', duration: 4, captions: Array.from('字幕時刻テスト。').map((text, i) => ({text, startMs: [0,100,200,300,2500,2600,2800,3000][i]}))};
+  assert.equal(captionAt(line, 2499, 4), '字幕時刻');
+  assert.equal(captionAt(line, 2500, 4), 'テスト。');
+  assert.equal(captionAt({...line, captions: null}, 1999, 4), '字幕時刻');
 });

@@ -24,7 +24,7 @@ Remotionはソース公開のライセンス製品で、一般的な無条件の
 
 ## 品質をどう扱うか
 
-コードのテストは時間・構図の計算と破損を検証する。カットの良さや再生数は証明しない。実写サンプルは実装の動作と編集判断をレビューするためのもの。異なる題材でも素材確認→編集→視聴修正を繰り返す。自称の「人間レベルスコア」を合否に使わない。
+コードのテストは時間・構図の計算と破損を検証する。カットの良さや再生数は証明しない。作品固有の台本や構成をテンプレート化せず、題材ごとに素材確認→編集→視聴修正を繰り返す。自称の「人間レベルスコア」を合否に使わない。
 
 ## 演出文法 v1 の確認（2026-09-08）
 
@@ -39,7 +39,6 @@ Remotionはソース公開のライセンス製品で、一般的な無条件の
 | [Remotion SFX](https://www.remotion.dev/docs/sfx) | switch/mouse-click等の公式音源。音はローカル取得し、明示した音源バンクから選択 |
 | [Remotion renderMedia](https://www.remotion.dev/docs/renderer/render-media) / [Encoding](https://www.remotion.dev/docs/encoding) | separateAudioToとpcm-16でミックスを無圧縮WAVへ出力。実測で見つけた中間AACの約42.7msの遅延を除き、最終AACのみに圧縮。フレームの中間MKVによるms丸めを避けるためdisallowParallelEncodingを指定 |
 | [FFmpeg silencedetect](https://ffmpeg.org/ffmpeg-filters.html#silencedetect) / [setpts](https://ffmpeg.org/ffmpeg-filters.html#setpts_002c-asetpts) | 発話端の無音検出、単調な時間写像での映像速度変更。内部発話の切断・光学フロー補間は含めない |
-| [NASA: Pad 39B water flow test](https://www.nasa.gov/centers-and-facilities/kennedy/pad-39b-water-flow-test-comes-through-loud-and-clear/) | 実写サンプルの説明と原映像。選んだ放水・点火区間は実際のフレームを見て確認 |
 
 パッケージはすべて4.0.521へ固定し、effects/sfxを追加。video-mattingの[公式資料](https://www.remotion.dev/docs/video-matting)も確認したが、取得できたMarkdownにはAvailableFrom 4.0.523とインストール例4.0.522が混在し、公開npmの `npm view @remotion/video-matting` はE404だった。そのため自動動画切り抜きは導入せず、実際の透過PNGを受け取る静止画レイヤーに限定した。将来の可用性は再確認が必要。
 

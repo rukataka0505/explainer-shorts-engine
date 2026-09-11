@@ -6,30 +6,11 @@
 
 `project.json.editing` v1では、8つの編集パターンと16種の演出を意味・対象・時刻で指定できる。字幕の登場と強調、寄って戻るズーム、減衰シェイク、実際の映像の停止、B-roll、速度カーブ、SEを同じ時間軸へ展開する。原稿の変更に追従する発話参照、固定seed、実レンダーでの配置検査を備える。[演出の契約・制限](docs/EDITING_CONTRACT.md)を参照。
 
-## 新しい編集をA/Bで確認する
-
-```powershell
-.\.venv\Scripts\python.exe examples/create_editing_demo.py
-# 同じNASA原本がある場合は、上のコマンドに --source-project projects/aivisspeech-nise-sample
-.\.venv\Scripts\python.exe tools/video.py prepare projects/editing-grammar-v1
-.\.venv\Scripts\python.exe examples/create_editing_demo.py --align-baseline
-.\.venv\Scripts\python.exe tools/video.py build projects/editing-grammar-v1 --quality preview
-.\.venv\Scripts\python.exe tools/video.py wait projects/editing-grammar-v1
-.\.venv\Scripts\python.exe tools/video.py review projects/editing-grammar-v1 --quality preview
-.\.venv\Scripts\python.exe tools/video.py build projects/editing-grammar-v1-baseline --quality preview
-.\.venv\Scripts\python.exe tools/video.py wait projects/editing-grammar-v1-baseline
-.\.venv\Scripts\python.exe tools/video.py compare projects/editing-grammar-v1 --baseline projects/editing-grammar-v1-baseline
-```
-
-約30秒の実写・にせ音声。同じ9行の台本・同一の原音声・NASA素材で、小さい字幕・演出なしの版と比較する。A/Bは字幕のサイズ・改行も含む比較。発話前後の無音処理で尺が変わるため、原稿ボタンで同じ発話へ移動できる。比較HTMLはブラウザーで開き、A/Bの音を別々に再生する。確認・修正後は両案件を `--quality final` でbuildし、compareにも同じqualityを指定する。検証サンプルは投稿しない。
-
 ```powershell
 # テンプレート一覧とJSON Schema
 .\.venv\Scripts\python.exe tools/video.py catalog
 .\.venv\Scripts\python.exe tools/video.py catalog --schema
 ```
-
-比較HTMLをHTTPで開く場合は `.\.venv\Scripts\python.exe tools/review_server.py` を起動し、`http://127.0.0.1:8767/editing-grammar-v1/work/compare/index.html` を開く。ローカル専用で、動画の区間移動に必要なbyte-range配信に対応する。
 
 ## セットアップ
 
@@ -56,17 +37,6 @@ npm.cmd ci --prefix remotion
 VOICEVOXを未導入なら `winget install --id HiroshibaKazuyuki.VOICEVOX -e`。`VOICEVOX_URL`、`VOICEVOX_ENGINE`、`VIDEO_FFMPEG`、`VIDEO_FFPROBE`で接続先・実行ファイルを指定できる。VOICEVOXを明示選択した時の接続先はlocalhost:50021。録音済み音声を使う案件はVOICEVOXなしでprepare/buildできる。
 
 Remotion公式Agent Skillsは`.agents/skills/remotion-best-practices/`へ固定版を同梱。Remotion関連パッケージは同じバージョンに固定し、npmのlockfileを含む。
-
-## まず実写サンプルを作る
-
-```powershell
-.\.venv\Scripts\python.exe examples/create_demo.py
-.\.venv\Scripts\python.exe tools/video.py build projects/demo-water --quality preview
-.\.venv\Scripts\python.exe tools/video.py wait projects/demo-water
-.\.venv\Scripts\python.exe tools/video.py review projects/demo-water --quality preview
-```
-
-NASAの4K元映像3本を約720MBダウンロードし、別の同一打ち上げ記録から15秒の現場音を抽出する。完成した編集指定を使い、約24秒の「ロケットを守る、水の壁」を再現する。この旧サンプルはVOICEVOX:青山龍星を明示指定している。通常の既定音声はAivisSpeech / にせ。APIや配布ファイルはNASA側で変更される可能性がある。
 
 `review`が返すHTMLを開くと、動画と各ショットの頭・中・末尾を見比べられる。画像を押すとその時刻へ移動する。これは編集確認用で、完成動画に文字や画像一覧が入ることはない。
 
@@ -97,25 +67,7 @@ buildは背景実行。waitは最長55秒待ち、終わっていなければも
 
 ## project.json
 
-```json
-{
-  "title": "ロケットを守る、水の壁",
-  "voices": {"narrator": {"provider": "aivisspeech", "style_id": 1937616896}},
-  "beats": [{"id": "hook", "lines": [
-    {"id": "q", "text": "この大量の水、何のためだと思う？", "gap": 0.2},
-    {"id": "a", "text": "実は、ロケットを音から守っている。", "gap": 0.4}
-  ]}],
-  "shots": [
-    {"id": "wide", "path": "assets/water.mp4", "source_start": 30,
-     "to": {"line": "a", "offset": -0.15},
-     "camera": [{"at": 0, "x": 0.53, "y": 0.6, "zoom": 1}]},
-    {"id": "detail", "path": "assets/water.mp4", "source_start": 55,
-     "from": {"line": "a", "offset": -0.15}}
-  ],
-  "audio": [{"path": "assets/water.mp4", "source_start": 30,
-             "volume": 0.4, "duck": true, "fade_in": 0.1, "fade_out": 0.3}]
-}
-```
+案件ごとの正本。具体的な台本や構成のサンプルはリポジトリに置かず、必要なキーと型は `tools/video.py catalog --schema` で確認する。
 
 | 指定 | 意味 |
 |---|---|
@@ -171,7 +123,7 @@ npm.cmd test --prefix remotion
 .\.venv\Scripts\python.exe tests/verify_editing_render.py
 ```
 
-元エンジンから音声キャッシュ、背景ジョブ、検査と非公開納品を継承。新エンジンは元フォルダに依存せず動く。`projects/`、素材、生成動画、認証情報はGit対象外。`examples/`に再現用の編集指定と素材取得コードを残す。
+元エンジンから音声キャッシュ、背景ジョブ、検査と非公開納品を継承。新エンジンは元フォルダに依存せず動く。`projects/`、素材、生成動画、認証情報はGit対象外。`examples/`には機械的な回帰検査fixtureだけを置く。
 
 回帰検査はフレーム位置・画素・実音声を調べ、38時点の縮小参照と比較する。参照を更新する時だけ `--update-reference` を指定し、生成される `output/editing-contact.jpg` を確認する。合成パターンの検査と、実写作品の良し悪しは別に評価する。[今回の実測・確認範囲](docs/VERIFICATION.md)。
 
@@ -189,15 +141,3 @@ ElevenLabs / Koji / eleven_multilingual_v2も選択可能。ElevenLabsの既定�
 音声は本文・声・モデル・設定を含むキャッシュで再利用し、字幕の配置変更だけでは再課金されない。
 
 API仕様: https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps
-
-検証用サンプルの再現:
-```powershell
-.\.venv\Scripts\python.exe examples/create_elevenlabs_demo.py
-.\.venv\Scripts\python.exe tools/video.py build projects/elevenlabs-preview --quality preview
-```
-
-AivisSpeechサンプルの再現（NASA実写・約20秒）:
-```powershell
-.\.venv\Scripts\python.exe examples/create_aivisspeech_demo.py
-.\.venv\Scripts\python.exe tools/video.py build projects/aivisspeech-nise-sample --quality preview
-```
