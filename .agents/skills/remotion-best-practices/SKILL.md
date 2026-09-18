@@ -1,59 +1,32 @@
 ---
 name: remotion-best-practices
-description: Router for all Remotion skills
-version: 4.0.521
+description: Implement or debug Remotion components and rendering, or change Remotion dependencies.
+metadata:
+  version: "4.0.521"
 ---
 
-## Preserve user changes
+## Scope in this repository
 
-Users may make edits in the code outside of the conversation.
+Use this skill for engine code, rendering issues, and Remotion dependencies. Ordinary Shorts production and edits to script, footage, sound, or `project.json` use the existing [editing workflow](../../../docs/EDITING.md) and [CLI](../../../README.md).
 
-If you detect a surprising change made in the meanwhile, don't overwrite it, assume it was intentional or ask for confirmation.
+The canonical project is `projects/<case>/project.json`; the shared renderer is `remotion/`. A new video uses that renderer. Preserve user edits and keep generated timing in `work/` derived from the project.
 
-## Creating a video
+The user's requested endpoint and repository approval rules govern completion. Bundled references also describe standalone videos; their Studio preview endpoint and render-only-on-request advice do not add an approval gate to already authorized production or fixture validation.
 
-If the user asks to make, create, or build a new video or composition, load [Create a new Remotion video](./remotion-create/REFERENCE.md), whether or not a Remotion project already exists.
+## Read the relevant reference
 
-## New project setup
+Choose the reference for the implementation being changed; follow further links only when needed. Check the official API documentation for the API in use.
 
-If no Remotion project currently exists, load [Create a new Remotion project](./remotion-create/REFERENCE.md)
-
-## React Markup Best Practices
-
-If you are writing Remotion React Markup, load [Remotion Markup Best Practices](./remotion-markup/REFERENCE.md)
-
-## Maps
-
-For static maps, animated routes and markers, geographic explainers, Mapbox, MapLibre, MapTiler, GeoJSON, or 3D geographic flyovers, load [Remotion Maps](./remotion-maps/REFERENCE.md).
-
-## Multimedia
-
-For achieving multimedia tasks in the browser, such as trimming, cropping videos, or getting metadata from them, load [Remotion Multimedia](./remotion-multimedia/REFERENCE.md)
-
-## Improving Interactivity
-
-By structuring the Remotion markup well, we can allow users to interactively change things in the Studio and write back to code. If relevant: [Interactivity Best Practices](./remotion-interactivity/REFERENCE.md)
-
-## Rendering
-
-For advanced rendering beyond simple `npx remotion render`, see: [Rendering Best Practices](./remotion-render/REFERENCE.md)
-
-## Opening Remotion Studio
-
-To launch a project in Remotion Studio, open its exact local URL, or configure Studio CLI flags, load [Remotion Studio](./remotion-studio/REFERENCE.md).
-
-## Captions
-
-When working with Captions, load [Remotion Captions](./remotion-captions/REFERENCE.md).
-
-## Creating a SaaS, automation or application
-
-Use the [Remotion SaaS skill](./remotion-saas/REFERENCE.md) for knowledge about Remotion-powered SaaS apps, such as `<Player>`, rendering on Lambda, Vercel, Cloudflare, via Express.js, client-side rendering, or for finding the right SaaS template.
-
-## Looking up Remotion APIs and documentation
-
-To find and read current Remotion documentation, load [Remotion Docs](./remotion-docs/REFERENCE.md).
-
-## Upgrading
-
-To upgrade Remotion, related packages, compatible Mediabunny packages, and installed Remotion Agent Skills, load [Remotion Upgrade](./remotion-upgrade/REFERENCE.md).
+| Task | Reference |
+| --- | --- |
+| React composition, timing, media, effects | [Markup](./remotion-markup/REFERENCE.md) |
+| Caption rendering or measured timestamps | [Captions](./remotion-captions/REFERENCE.md) |
+| Renderer options and render failures | [Rendering](./remotion-render/REFERENCE.md) |
+| Launch or configure Studio when needed | [Studio](./remotion-studio/REFERENCE.md) |
+| Add Studio editing controls | [Interactivity](./remotion-interactivity/REFERENCE.md) |
+| Browser-side media processing | [Multimedia](./remotion-multimedia/REFERENCE.md) |
+| Look up current Remotion APIs | [Docs](./remotion-docs/REFERENCE.md) |
+| Requested dependency or skill upgrade | [Upgrade](./remotion-upgrade/REFERENCE.md) |
+| Explicitly requested map or geographic visualization | [Maps](./remotion-maps/REFERENCE.md) |
+| Requested Player, hosted renderer, or SaaS | [SaaS](./remotion-saas/REFERENCE.md) |
+| Explicitly requested standalone Remotion project or new composition outside this engine | [Create](./remotion-create/REFERENCE.md) |

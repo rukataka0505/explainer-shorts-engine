@@ -36,7 +36,7 @@ npm.cmd ci --prefix remotion
 
 VOICEVOXを未導入なら `winget install --id HiroshibaKazuyuki.VOICEVOX -e`。`VOICEVOX_URL`、`VOICEVOX_ENGINE`、`VIDEO_FFMPEG`、`VIDEO_FFPROBE`で接続先・実行ファイルを指定できる。VOICEVOXを明示選択した時の接続先はlocalhost:50021。録音済み音声を使う案件はVOICEVOXなしでprepare/buildできる。
 
-Remotion公式Agent Skillsは`.agents/skills/remotion-best-practices/`へ固定版を同梱。Remotion関連パッケージは同じバージョンに固定し、npmのlockfileを含む。
+Remotion公式Agent Skillsは`.agents/skills/remotion-best-practices/`へ固定版を同梱し、入口はこのエンジン向けに調整している。通常の案件制作はproject.jsonとCLI、Remotionのコード・レンダー基盤・依存関係の変更はスキルから該当資料を使う。Remotion関連パッケージは同じバージョンに固定し、npmのlockfileを含む。
 
 `review`が返すHTMLを開くと、動画と各ショットの頭・中・末尾を見比べられる。画像を押すとその時刻へ移動する。これは編集確認用で、完成動画に文字や画像一覧が入ることはない。
 
@@ -44,7 +44,16 @@ Remotion公式Agent Skillsは`.agents/skills/remotion-best-practices/`へ固定�
 
 音も台本と一緒に設計する。[音設計・24音のSE棚](docs/SOUND.md)を参照。`tools/video.py sounds --audition` で検索・試聴、`sounds projects/<案件> --use <音ID>` で取り込み、`sound-plan projects/<案件> --init` で採否の下書きを作れる。試聴棚の音は機械検査済みで、場面への採用前には試聴する。
 
-Codexへ「○○の解説Shortsを作って」と依頼する。調査・台本・主要映像方針・声・納品方法を一度確認した後に制作する。「確認不要」で省略できる。
+Codexへ「○○の解説Shortsを作って」と依頼する。調査・台本・主要映像方針・声・納品方法を一度確認した後に制作する。「確認不要」「最後まで進めて」で初回確認を省略できる。承認済みの制作・修正は依頼された到達点まで続ける。
+
+| 依頼の範囲 | 完了の根拠 |
+| --- | --- |
+| 調査・制作案のみ／通常の初回確認 | 調査・台本・映像方針・声・納品方法を提示。制作案は正本に残す |
+| 承認済みの動画完成 | previewの視聴・修正、finalの完了、現在の正本・MP4に対応する検証結果と完成映像の確認 |
+| YouTube納品・公開 | 上記に加え、依頼されたprivateまたはpublicと処理完了・サムネイル設定のAPI確認 |
+| エンジン改善 | 変更に対応する検証・必要な修正、commit/push、実際の確認範囲と未確認点の報告 |
+
+背景ジョブの起動やStudioの表示は中間状態。再開時は既存案件の正本と`status`を確認し、未完了の工程から進める。認証不足などで完了できない場合は、済んだ工程・未完了の工程・必要な入力を具体的に報告する。
 
 ```powershell
 # 素材を場面ごとに調べる（PySceneDetect）
@@ -63,7 +72,13 @@ Codexへ「○○の解説Shortsを作って」と依頼する。調査・台本
 .\.venv\Scripts\python.exe tools/video.py review projects/<案件> --quality final
 ```
 
-buildは背景実行。waitは最長55秒待ち、終わっていなければもう一度waitする。失敗時は`work/job.log`を確認する。同じ案件の二重buildを避け、子プロセスをWindows Jobへ収容する。
+buildは背景実行。waitは既定で最長55秒待ち、返されたstatusがstarting/runningなら再度待つ。failedなら`work/job.log`を確認して原因を修正し、succeededなら次の工程へ進む。同じ案件の二重buildを避け、子プロセスをWindows Jobへ収容する。
+
+ブラウザでカットへシークして確認する時は、byte-range対応のレビューサーバーを使う。起動後、例えば`http://127.0.0.1:8767/<案件>/work/review-preview/index.html`を開く（実際のHTMLパスはreviewの出力を使う）。
+
+```powershell
+.\.venv\Scripts\python.exe tools/review_server.py --directory projects --port 8767
+```
 
 ## project.json
 
@@ -109,6 +124,17 @@ buildは背景実行。waitは最長55秒待ち、終わっていなければも
 `output/thumbnail.jpg`を用意する。文字が不要なら完成版の適切なフレームをFFmpegでJPEGへ取り出せる。既存のYouTube認証はリポジトリ外の`%LOCALAPPDATA%/VideoAutomationEngine/`を共有し、deliverはprivateで納品する。公開依頼がある場合は、納品完了後に`tools/video.py publish projects/<案件>`でpublicへ変更し、APIで再確認する。現在の原稿・MP4と検証結果の一致、YouTube処理完了、サムネイル設定成功まで確認する。
 
 ## 開発と保存
+
+指示・スキルの適用範囲と完了条件の見直しは[ハーネスの検証記録](docs/HARNESS.md)を参照。
+
+変更に対応する検証を選ぶ。下のコマンドは選択肢であり、毎回すべてを実行する手順ではない。使い捨てfixtureによるローカル検証・修正・再検証は個別の承認なしで進める。成功後の再実行は、追加変更・失敗・未解決の懸念がある場合に行う。
+
+| 変更 | 検証の目安 |
+| --- | --- |
+| 文書・指示・スキル | 差分、参照先、CLIとの一致、依頼範囲と完了条件の整合。スキルはfrontmatterも検査 |
+| Pythonの処理 | 対象の`tests/test_*.py`。共通処理や影響が広い変更ならPython全体 |
+| Remotionの型・時間計算・演出 | typecheck、該当するNodeテスト |
+| 画・音・カット・ミックスの変更 | 影響に合う実レンダーfixtureと出力検査。知覚上の変化は音付き視聴・必要なA/B |
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -q
